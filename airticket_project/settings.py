@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'airticket_project.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default="postgresql://goimomi_airline_user:d6sslRxyVyH5hGI3ABNxns7ShIffVyJq@dpg-d8sh6efavr4c73fpqb1g-a.oregon-postgres.render.com/goimomi_airline",
         conn_max_age=600
     )
 }
