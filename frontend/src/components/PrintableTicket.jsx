@@ -1,6 +1,5 @@
 import React from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 // SVG Icons for Dangerous Goods & Oman Aviation Logo
 const OmanAirLogo = () => (
@@ -267,7 +266,7 @@ export default function PrintableTicket({ booking }) {
             {/* Airline Logo column */}
             <div className="col-span-3 flex items-center space-x-2 text-left">
               <img 
-                src={`${API_BASE_URL}/static/airlinelogo/${seg1.airline_logo || 'oman-air-logo-circular.png'}`} 
+                src={`/static/airlinelogo/${seg1.airline_logo || 'oman-air-logo-circular.png'}`} 
                 alt={seg1.airline_name || 'Airline Logo'} 
                 className="w-7 h-7 object-contain inline-block mr-1"
               />
@@ -338,7 +337,7 @@ export default function PrintableTicket({ booking }) {
             {/* Airline Logo */}
             <div className="col-span-3 flex items-center space-x-2 text-left">
               <img 
-                src={`${API_BASE_URL}/static/airlinelogo/${seg2.airline_logo || 'oman-air-logo-circular.png'}`} 
+                src={`/static/airlinelogo/${seg2.airline_logo || 'oman-air-logo-circular.png'}`} 
                 alt={seg2.airline_name || 'Airline Logo'} 
                 className="w-7 h-7 object-contain inline-block mr-1"
               />
@@ -457,7 +456,7 @@ export default function PrintableTicket({ booking }) {
             {/* Airline Logo */}
             <div className="col-span-3 flex items-center space-x-2 text-left">
               <img 
-                src={`${API_BASE_URL}/static/airlinelogo/${seg3.airline_logo || 'oman-air-logo-circular.png'}`} 
+                src={`/static/airlinelogo/${seg3.airline_logo || 'oman-air-logo-circular.png'}`} 
                 alt={seg3.airline_name || 'Airline Logo'} 
                 className="w-7 h-7 object-contain inline-block mr-1"
               />
@@ -528,7 +527,7 @@ export default function PrintableTicket({ booking }) {
             {/* Airline Logo */}
             <div className="col-span-3 flex items-center space-x-2 text-left">
               <img 
-                src={`${API_BASE_URL}/static/airlinelogo/${seg4.airline_logo || 'oman-air-logo-circular.png'}`} 
+                src={`/static/airlinelogo/${seg4.airline_logo || 'oman-air-logo-circular.png'}`} 
                 alt={seg4.airline_name || 'Airline Logo'} 
                 className="w-7 h-7 object-contain inline-block mr-1"
               />

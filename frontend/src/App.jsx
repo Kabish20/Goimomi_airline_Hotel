@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import PrintableTicket from './components/PrintableTicket';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  const hostname = window.location.hostname;
+  if (hostname.endsWith('.onrender.com')) {
+    const baseName = hostname.replace('.onrender.com', '');
+    if (!baseName.endsWith('-backend')) {
+      return `https://${baseName}-backend.onrender.com`;
+    }
+  }
+  return 'http://127.0.0.1:8000';
+};
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-
+const API_BASE_URL = getApiBaseUrl();
 // Complete mock dataset for robust offline fallback
 const AIRLINE_LOGOS = [
   { value: "oman-air-logo-circular.png", label: "Oman Air" },
