@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
       return `https://${baseName}-backend.onrender.com`;
     }
   }
-  return 'http://127.0.0.1:8000';
+  return 'http://127.0.0.1:8080';
 };
 
 const API_BASE_URL = getApiBaseUrl();
