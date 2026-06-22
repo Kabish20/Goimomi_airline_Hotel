@@ -176,6 +176,37 @@ export default function PrintableTicket({ booking }) {
   const seg3 = booking.segments.find(s => s.sequence === 3) || {};
   const seg4 = booking.segments.find(s => s.sequence === 4) || {};
   
+  const isOutboundActive = seg1.is_active !== false || seg2.is_active !== false;
+  const isInboundActive = seg3.is_active !== false || seg4.is_active !== false;
+
+  // Outbound Header Text
+  let outboundRouteText = 'Chennai → Jeddah';
+  let outboundDateText = 'Jun 23rd';
+  if (seg1.is_active !== false && seg2.is_active !== false) {
+    outboundRouteText = `${seg1.departure_city || 'Chennai'} → ${seg2.arrival_city || 'Jeddah'}`;
+    outboundDateText = seg1.departure_time ? parseDateLocal(seg1.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Jun 23rd';
+  } else if (seg1.is_active !== false) {
+    outboundRouteText = `${seg1.departure_city || 'Chennai'} → ${seg1.arrival_city || 'Muscat'}`;
+    outboundDateText = seg1.departure_time ? parseDateLocal(seg1.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Jun 23rd';
+  } else if (seg2.is_active !== false) {
+    outboundRouteText = `${seg2.departure_city || 'Muscat'} → ${seg2.arrival_city || 'Jeddah'}`;
+    outboundDateText = seg2.departure_time ? parseDateLocal(seg2.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Jun 23rd';
+  }
+
+  // Inbound Header Text
+  let inboundRouteText = 'Jeddah → Chennai';
+  let inboundDateText = 'Sep 18th';
+  if (seg3.is_active !== false && seg4.is_active !== false) {
+    inboundRouteText = `${seg3.departure_city || 'Jeddah'} → ${seg4.arrival_city || 'Chennai'}`;
+    inboundDateText = seg3.departure_time ? parseDateLocal(seg3.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Sep 18th';
+  } else if (seg3.is_active !== false) {
+    inboundRouteText = `${seg3.departure_city || 'Jeddah'} → ${seg3.arrival_city || 'Muscat'}`;
+    inboundDateText = seg3.departure_time ? parseDateLocal(seg3.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Sep 18th';
+  } else if (seg4.is_active !== false) {
+    inboundRouteText = `${seg4.departure_city || 'Muscat'} → ${seg4.arrival_city || 'Chennai'}`;
+    inboundDateText = seg4.departure_time ? parseDateLocal(seg4.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Sep 18th';
+  }
+
   const passenger = booking.passengers[0] || { full_name: '', date_of_birth: '', other_info: '' };
 
   // Barcode matching the exact PDF417 barcode image uploaded by the user - renders a single barcode
@@ -246,384 +277,408 @@ export default function PrintableTicket({ booking }) {
       {/* ========================================================
           OUTBOUND CONTAINER
           ======================================================== */}
-      <div className="border border-gray-300 rounded mb-6 p-4 space-y-4">
-        
-        {/* Outbound Sub-Header Info */}
-        <div className="flex justify-between items-start">
-          <div className="bg-gray-100 border border-gray-300 px-4 py-2 font-bold text-xs rounded text-gray-800">
-            {seg1.departure_city || 'Chennai'} → {seg2.arrival_city || 'Jeddah'} on {seg1.departure_time ? parseDateLocal(seg1.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Jun 23rd'} 2026
-          </div>
-          <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
-            <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
-            <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
-          </div>
-        </div>
-
-        {/* Leg 1 details */}
-        <div className="border-b border-gray-200 pb-4">
-          <div className="grid grid-cols-12 gap-2 items-center">
-            
-            {/* Airline Logo column */}
-            <div className="col-span-3 flex items-center space-x-2 text-left">
-              <img 
-                src={`/static/airlinelogo/${seg1.airline_logo || 'oman-air-logo-circular.png'}`} 
-                alt={seg1.airline_name || 'Airline Logo'} 
-                className="w-7 h-7 object-contain inline-block mr-1"
-              />
-              <div>
-                <div className="font-bold text-[11px] text-gray-900 leading-none">{seg1.airline_name || 'Oman Aviation'}</div>
-                <div className="text-gray-500 font-mono text-[10px] mt-1">{seg1.airline_code || 'WY'}- {seg1.flight_number || '252'}</div>
-              </div>
+      {isOutboundActive && (
+        <div className="border border-gray-300 rounded mb-6 p-4 space-y-4">
+          
+          {/* Outbound Sub-Header Info */}
+          <div className="flex justify-between items-start">
+            <div className="bg-gray-100 border border-gray-300 px-4 py-2 font-bold text-xs rounded text-gray-800">
+              {outboundRouteText} on {outboundDateText} 2026
             </div>
-
-            {/* Departure Column */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg1.departure_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg1.departure_city}, {seg1.departure_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg1.departure_airport_name}</div>
-              {seg1.departure_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg1.departure_terminal}</div>
-              )}
+            <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
+              <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
             </div>
+          </div>
 
-            {/* Stop indicator Arrow */}
-            <div className="col-span-2 text-center flex flex-col items-center justify-center">
-              <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
-              <div className="w-24 flex items-center justify-center mt-1">
-                <div className="h-[1.5px] bg-gray-400 w-full relative">
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+          {/* Leg 1 details */}
+          {seg1.is_active !== false && (
+            <div className="border-b border-gray-200 pb-4">
+              <div className="grid grid-cols-12 gap-2 items-center">
+                
+                {/* Airline Logo column */}
+                <div className="col-span-3 flex items-center space-x-2 text-left">
+                  <img 
+                    src={`/static/airlinelogo/${seg1.airline_logo || 'oman-air-logo-circular.png'}`} 
+                    alt={seg1.airline_name || 'Airline Logo'} 
+                    className="w-7 h-7 object-contain inline-block mr-1"
+                  />
+                  <div>
+                    <div className="font-bold text-[11px] text-gray-900 leading-none">{seg1.airline_name || 'Oman Aviation'}</div>
+                    <div className="text-gray-500 font-mono text-[10px] mt-1">{seg1.airline_code || 'WY'}- {seg1.flight_number || '252'}</div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Arrival Column */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg1.arrival_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg1.arrival_city}, {seg1.arrival_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg1.arrival_airport_name}</div>
-              {seg1.arrival_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg1.arrival_terminal}</div>
-              )}
-            </div>
-
-            {/* Cabin details */}
-            <div className="col-span-1 text-right">
-              <div className="font-bold text-gray-800">{seg1.duration || '3h 50m'}</div>
-              <div className="text-gray-500 text-[10px] mt-0.5">{seg1.cabin_class || 'Economy'}</div>
-            </div>
-
-          </div>
-
-          <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
-            <div>Fare Type : {seg1.fare_type || 'NA'}</div>
-            <div>Baggage Information</div>
-            <div className="font-semibold text-gray-800">Adult - Check-in: {seg1.checkin_baggage || '30KG'}, Cabin : {seg1.cabin_baggage || '7KG'},</div>
-          </div>
-        </div>
-
-        {/* Layover Banner */}
-        {seg1.layover_duration && (
-          <div className="bg-gray-100 border border-gray-300 rounded px-4 py-1.5 text-center text-xs font-semibold text-gray-700">
-            Layover Timer - {seg1.layover_duration}
-          </div>
-        )}
-
-        {/* Leg 2 details */}
-        <div>
-          <div className="grid grid-cols-12 gap-2 items-center">
-            
-            {/* Airline Logo */}
-            <div className="col-span-3 flex items-center space-x-2 text-left">
-              <img 
-                src={`/static/airlinelogo/${seg2.airline_logo || 'oman-air-logo-circular.png'}`} 
-                alt={seg2.airline_name || 'Airline Logo'} 
-                className="w-7 h-7 object-contain inline-block mr-1"
-              />
-              <div>
-                <div className="font-bold text-[11px] text-gray-900 leading-none">{seg2.airline_name || 'Oman Aviation'}</div>
-                <div className="text-gray-500 font-mono text-[10px] mt-1">{seg2.airline_code || 'WY'}- {seg2.flight_number || '675'}</div>
-              </div>
-            </div>
-
-            {/* Departure */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg2.departure_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg2.departure_city}, {seg2.departure_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg2.departure_airport_name}</div>
-              {seg2.departure_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg2.departure_terminal}</div>
-              )}
-            </div>
-
-            {/* Stop Indicator */}
-            <div className="col-span-2 text-center flex flex-col items-center justify-center">
-              <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
-              <div className="w-24 flex items-center justify-center mt-1">
-                <div className="h-[1.5px] bg-gray-400 w-full relative">
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                {/* Departure Column */}
+                <div className="col-span-3 text-left">
+                  <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
+                  <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg1.departure_time)}</div>
+                  <div className="font-semibold text-gray-800 text-[11px]">{seg1.departure_city}, {seg1.departure_country}</div>
+                  <div className="text-gray-500 text-[10px]">{seg1.departure_airport_name}</div>
+                  {seg1.departure_terminal && (
+                    <div className="text-gray-500 text-[10px]">{seg1.departure_terminal}</div>
+                  )}
                 </div>
+
+                {/* Stop indicator Arrow */}
+                <div className="col-span-2 text-center flex flex-col items-center justify-center">
+                  <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
+                  <div className="w-24 flex items-center justify-center mt-1">
+                    <div className="h-[1.5px] bg-gray-400 w-full relative">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrival Column */}
+                <div className="col-span-3 text-left">
+                  <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
+                  <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg1.arrival_time)}</div>
+                  <div className="font-semibold text-gray-800 text-[11px]">{seg1.arrival_city}, {seg1.arrival_country}</div>
+                  <div className="text-gray-500 text-[10px]">{seg1.arrival_airport_name}</div>
+                  {seg1.arrival_terminal && (
+                    <div className="text-gray-500 text-[10px]">{seg1.arrival_terminal}</div>
+                  )}
+                </div>
+
+                {/* Cabin details */}
+                <div className="col-span-1 text-right">
+                  <div className="font-bold text-gray-800">{seg1.duration || '3h 50m'}</div>
+                  <div className="text-gray-500 text-[10px] mt-0.5">{seg1.cabin_class || 'Economy'}</div>
+                </div>
+
+              </div>
+
+              <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
+                <div>Fare Type : {seg1.fare_type || 'NA'}</div>
+                <div>Baggage Information</div>
+                <div className="font-semibold text-gray-800">Adult - Check-in: {seg1.checkin_baggage || '30KG'}, Cabin : {seg1.cabin_baggage || '7KG'},</div>
               </div>
             </div>
+          )}
 
-            {/* Arrival */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg2.arrival_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg2.arrival_city}, {seg2.arrival_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg2.arrival_airport_name}</div>
-              {seg2.arrival_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg2.arrival_terminal}</div>
-              )}
+          {/* Layover Banner */}
+          {seg1.is_active !== false && seg2.is_active !== false && seg1.layover_duration && (
+            <div className="bg-gray-100 border border-gray-300 rounded px-4 py-1.5 text-center text-xs font-semibold text-gray-700">
+              Layover Timer - {seg1.layover_duration}
             </div>
+          )}
 
-            {/* Class */}
-            <div className="col-span-1 text-right">
-              <div className="font-bold text-gray-800">{seg2.duration || '3h 20m'}</div>
-              <div className="text-gray-500 text-[10px] mt-0.5">{seg2.cabin_class || 'Economy'}</div>
+          {/* Leg 2 details */}
+          {seg2.is_active !== false && (
+            <div>
+              <div className="grid grid-cols-12 gap-2 items-center">
+                
+                {/* Airline Logo */}
+                <div className="col-span-3 flex items-center space-x-2 text-left">
+                  <img 
+                    src={`/static/airlinelogo/${seg2.airline_logo || 'oman-air-logo-circular.png'}`} 
+                    alt={seg2.airline_name || 'Airline Logo'} 
+                    className="w-7 h-7 object-contain inline-block mr-1"
+                  />
+                  <div>
+                    <div className="font-bold text-[11px] text-gray-900 leading-none">{seg2.airline_name || 'Oman Aviation'}</div>
+                    <div className="text-gray-500 font-mono text-[10px] mt-1">{seg2.airline_code || 'WY'}- {seg2.flight_number || '675'}</div>
+                  </div>
+                </div>
+
+                {/* Departure */}
+                <div className="col-span-3 text-left">
+                  <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
+                  <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg2.departure_time)}</div>
+                  <div className="font-semibold text-gray-800 text-[11px]">{seg2.departure_city}, {seg2.departure_country}</div>
+                  <div className="text-gray-500 text-[10px]">{seg2.departure_airport_name}</div>
+                  {seg2.departure_terminal && (
+                    <div className="text-gray-500 text-[10px]">{seg2.departure_terminal}</div>
+                  )}
+                </div>
+
+                {/* Stop Indicator */}
+                <div className="col-span-2 text-center flex flex-col items-center justify-center">
+                  <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
+                  <div className="w-24 flex items-center justify-center mt-1">
+                    <div className="h-[1.5px] bg-gray-400 w-full relative">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrival */}
+                <div className="col-span-3 text-left">
+                  <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
+                  <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg2.arrival_time)}</div>
+                  <div className="font-semibold text-gray-800 text-[11px]">{seg2.arrival_city}, {seg2.arrival_country}</div>
+                  <div className="text-gray-500 text-[10px]">{seg2.arrival_airport_name}</div>
+                  {seg2.arrival_terminal && (
+                    <div className="text-gray-500 text-[10px]">{seg2.arrival_terminal}</div>
+                  )}
+                </div>
+
+                {/* Class */}
+                <div className="col-span-1 text-right">
+                  <div className="font-bold text-gray-800">{seg2.duration || '3h 20m'}</div>
+                  <div className="text-gray-500 text-[10px] mt-0.5">{seg2.cabin_class || 'Economy'}</div>
+                </div>
+
+              </div>
+
+              <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
+                <div>Fare Type : {seg2.fare_type || 'NA'}</div>
+                <div>Baggage Information</div>
+                <div className="font-semibold text-gray-800">Adult - Check-in: {seg2.checkin_baggage || '30KG'}, Cabin : {seg2.cabin_baggage || '7KG'},</div>
+              </div>
             </div>
+          )}
 
-          </div>
-
-          <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
-            <div>Fare Type : {seg2.fare_type || 'NA'}</div>
-            <div>Baggage Information</div>
-            <div className="font-semibold text-gray-800">Adult - Check-in: {seg2.checkin_baggage || '30KG'}, Cabin : {seg2.cabin_baggage || '7KG'},</div>
-          </div>
         </div>
-
-      </div>
+      )}
 
       {/* ========================================================
           PASSENGER DETAILS TABLE (OUTBOUND)
           ======================================================== */}
-      <div className="border border-gray-300 rounded mb-8 overflow-hidden">
-        <div className="bg-gray-200 border-b border-gray-300 px-4 py-2 font-bold text-xs text-gray-800 text-left">
-          Passenger Details ( {booking.passengers.length} )
-        </div>
-        <table className="min-w-full divide-y divide-gray-300 text-left text-xs">
-          <thead>
-            <tr className="bg-gray-50 font-bold text-gray-700">
-              <th className="px-4 py-2 border-r border-gray-300 w-12 text-center">Sr.</th>
-              <th className="px-4 py-2 border-r border-gray-300 w-5/12">Name, DOB, Passport, & FF</th>
-              <th className="px-4 py-2 border-r border-gray-300 w-3/12">PNR & Ticket No.</th>
-              <th className="px-4 py-2">Meal, Baggage, Seat & Other Preference</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {booking.passengers.map((p, idx) => (
-              <tr key={idx}>
-                <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
-                <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
-                  <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
-                  <div className="pt-2">
-                    {renderSingleBarcode(idx)}
-                  </div>
-                </td>
-                <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
-                  <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
-                  <div>{seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">ONFDOJ</strong></div>
-                </td>
-                <td className="px-4 py-4 text-gray-400 italic"></td>
+      {isOutboundActive && (
+        <div className="border border-gray-300 rounded mb-8 overflow-hidden">
+          <div className="bg-gray-200 border-b border-gray-300 px-4 py-2 font-bold text-xs text-gray-800 text-left">
+            Passenger Details ( {booking.passengers.length} )
+          </div>
+          <table className="min-w-full divide-y divide-gray-300 text-left text-xs">
+            <thead>
+              <tr className="bg-gray-50 font-bold text-gray-700">
+                <th className="px-4 py-2 border-r border-gray-300 w-12 text-center">Sr.</th>
+                <th className="px-4 py-2 border-r border-gray-300 w-5/12">Name, DOB, Passport, & FF</th>
+                <th className="px-4 py-2 border-r border-gray-300 w-3/12">PNR & Ticket No.</th>
+                <th className="px-4 py-2">Meal, Baggage, Seat & Other Preference</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {booking.passengers.map((p, idx) => (
+                <tr key={idx}>
+                  <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
+                  <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
+                    <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
+                    <div className="pt-2">
+                      {renderSingleBarcode(idx)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
+                    {seg1.is_active !== false && (
+                      <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                    )}
+                    {seg2.is_active !== false && (
+                      <div>{seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-gray-400 italic"></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       </div>
  
       <div className="print-page-2">
         {/* ========================================================
             INBOUND CONTAINER
             ======================================================== */}
-        <div className="border border-gray-300 rounded mb-6 p-4 space-y-4">
-        
-        {/* Inbound Header */}
-        <div className="flex justify-between items-start">
-          <div className="bg-gray-100 border border-gray-300 px-4 py-2 font-bold text-xs rounded text-gray-800">
-            {seg3.departure_city || 'Jeddah'} → {seg4.arrival_city || 'Chennai'} on {seg3.departure_time ? parseDateLocal(seg3.departure_time).toLocaleDateString('en-US', {month: 'short', day: '2-digit'}) : 'Sep 18th'} 2026
-          </div>
-          <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
-            <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
-            <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
-          </div>
-        </div>
-
-        {/* Leg 3 details */}
-        <div className="border-b border-gray-200 pb-4">
-          <div className="grid grid-cols-12 gap-2 items-center">
-            
-            {/* Airline Logo */}
-            <div className="col-span-3 flex items-center space-x-2 text-left">
-              <img 
-                src={`/static/airlinelogo/${seg3.airline_logo || 'oman-air-logo-circular.png'}`} 
-                alt={seg3.airline_name || 'Airline Logo'} 
-                className="w-7 h-7 object-contain inline-block mr-1"
-              />
-              <div>
-                <div className="font-bold text-[11px] text-gray-900 leading-none">{seg3.airline_name || 'Oman Aviation'}</div>
-                <div className="text-gray-500 font-mono text-[10px] mt-1">{seg3.airline_code || 'WY'}- {seg3.flight_number || '674'}</div>
+        {isInboundActive && (
+          <div className="border border-gray-300 rounded mb-6 p-4 space-y-4">
+          
+            {/* Inbound Header */}
+            <div className="flex justify-between items-start">
+              <div className="bg-gray-100 border border-gray-300 px-4 py-2 font-bold text-xs rounded text-gray-800">
+                {inboundRouteText} on {inboundDateText} 2026
+              </div>
+              <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
+                <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
+                <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
               </div>
             </div>
 
-            {/* Departure */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg3.departure_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg3.departure_city}, {seg3.departure_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg3.departure_airport_name}</div>
-              {seg3.departure_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg3.departure_terminal}</div>
-              )}
-            </div>
+            {/* Leg 3 details */}
+            {seg3.is_active !== false && (
+              <div className="border-b border-gray-200 pb-4">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  
+                  {/* Airline Logo */}
+                  <div className="col-span-3 flex items-center space-x-2 text-left">
+                    <img 
+                      src={`/static/airlinelogo/${seg3.airline_logo || 'oman-air-logo-circular.png'}`} 
+                      alt={seg3.airline_name || 'Airline Logo'} 
+                      className="w-7 h-7 object-contain inline-block mr-1"
+                    />
+                    <div>
+                      <div className="font-bold text-[11px] text-gray-900 leading-none">{seg3.airline_name || 'Oman Aviation'}</div>
+                      <div className="text-gray-500 font-mono text-[10px] mt-1">{seg3.airline_code || 'WY'}- {seg3.flight_number || '674'}</div>
+                    </div>
+                  </div>
 
-            {/* Stop Indicator */}
-            <div className="col-span-2 text-center flex flex-col items-center justify-center">
-              <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
-              <div className="w-24 flex items-center justify-center mt-1">
-                <div className="h-[1.5px] bg-gray-400 w-full relative">
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                  {/* Departure */}
+                  <div className="col-span-3 text-left">
+                    <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
+                    <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg3.departure_time)}</div>
+                    <div className="font-semibold text-gray-800 text-[11px]">{seg3.departure_city}, {seg3.departure_country}</div>
+                    <div className="text-gray-500 text-[10px]">{seg3.departure_airport_name}</div>
+                    {seg3.departure_terminal && (
+                      <div className="text-gray-500 text-[10px]">{seg3.departure_terminal}</div>
+                    )}
+                  </div>
+
+                  {/* Stop Indicator */}
+                  <div className="col-span-2 text-center flex flex-col items-center justify-center">
+                    <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
+                    <div className="w-24 flex items-center justify-center mt-1">
+                      <div className="h-[1.5px] bg-gray-400 w-full relative">
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Arrival */}
+                  <div className="col-span-3 text-left">
+                    <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
+                    <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg3.arrival_time)}</div>
+                    <div className="font-semibold text-gray-800 text-[11px]">{seg3.arrival_city}, {seg3.arrival_country}</div>
+                    <div className="text-gray-500 text-[10px]">{seg3.arrival_airport_name}</div>
+                    {seg3.arrival_terminal && (
+                      <div className="text-gray-500 text-[10px]">{seg3.arrival_terminal}</div>
+                    )}
+                  </div>
+
+                  {/* Cabin */}
+                  <div className="col-span-1 text-right">
+                    <div className="font-bold text-gray-800">{seg3.duration || '3h 15m'}</div>
+                    <div className="text-gray-500 text-[10px] mt-0.5">{seg3.cabin_class || 'Economy'}</div>
+                  </div>
+
+                </div>
+
+                <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
+                  <div>Fare Type : {seg3.fare_type || 'NA'}</div>
+                  <div>Baggage Information</div>
+                  <div className="font-semibold text-gray-800">Adult - Check-in: {seg3.checkin_baggage || '30KG'}, Cabin : {seg3.cabin_baggage || '7KG'},</div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Arrival */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg3.arrival_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg3.arrival_city}, {seg3.arrival_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg3.arrival_airport_name}</div>
-              {seg3.arrival_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg3.arrival_terminal}</div>
-              )}
-            </div>
+            {/* Layover Banner */}
+            {seg3.is_active !== false && seg4.is_active !== false && seg3.layover_duration && (
+              <div className="bg-gray-100 border border-gray-300 rounded px-4 py-1.5 text-center text-xs font-semibold text-gray-700">
+                Layover Timer - {seg3.layover_duration}
+              </div>
+            )}
 
-            {/* Cabin */}
-            <div className="col-span-1 text-right">
-              <div className="font-bold text-gray-800">{seg3.duration || '3h 15m'}</div>
-              <div className="text-gray-500 text-[10px] mt-0.5">{seg3.cabin_class || 'Economy'}</div>
-            </div>
+            {/* Leg 4 details */}
+            {seg4.is_active !== false && (
+              <div>
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  
+                  {/* Airline Logo */}
+                  <div className="col-span-3 flex items-center space-x-2 text-left">
+                    <img 
+                      src={`/static/airlinelogo/${seg4.airline_logo || 'oman-air-logo-circular.png'}`} 
+                      alt={seg4.airline_name || 'Airline Logo'} 
+                      className="w-7 h-7 object-contain inline-block mr-1"
+                    />
+                    <div>
+                      <div className="font-bold text-[11px] text-gray-900 leading-none">{seg4.airline_name || 'Oman Aviation'}</div>
+                      <div className="text-gray-500 font-mono text-[10px] mt-1">{seg4.airline_code || 'WY'}- {seg4.flight_number || '253'}</div>
+                    </div>
+                  </div>
 
-          </div>
+                  {/* Departure */}
+                  <div className="col-span-3 text-left">
+                    <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
+                    <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg4.departure_time)}</div>
+                    <div className="font-semibold text-gray-800 text-[11px]">{seg4.departure_city}, {seg4.departure_country}</div>
+                    <div className="text-gray-500 text-[10px]">{seg4.departure_airport_name}</div>
+                    {seg4.departure_terminal && (
+                      <div className="text-gray-500 text-[10px]">{seg4.departure_terminal}</div>
+                    )}
+                  </div>
 
-          <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
-            <div>Fare Type : {seg3.fare_type || 'NA'}</div>
-            <div>Baggage Information</div>
-            <div className="font-semibold text-gray-800">Adult - Check-in: {seg3.checkin_baggage || '30KG'}, Cabin : {seg3.cabin_baggage || '7KG'},</div>
-          </div>
-        </div>
+                  {/* Stop Indicator */}
+                  <div className="col-span-2 text-center flex flex-col items-center justify-center">
+                    <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
+                    <div className="w-24 flex items-center justify-center mt-1">
+                      <div className="h-[1.5px] bg-gray-400 w-full relative">
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
+                      </div>
+                    </div>
+                  </div>
 
-        {/* Layover Banner */}
-        {seg3.layover_duration && (
-          <div className="bg-gray-100 border border-gray-300 rounded px-4 py-1.5 text-center text-xs font-semibold text-gray-700">
-            Layover Timer - {seg3.layover_duration}
+                  {/* Arrival */}
+                  <div className="col-span-3 text-left">
+                    <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
+                    <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg4.arrival_time)}</div>
+                    <div className="font-semibold text-gray-800 text-[11px]">{seg4.arrival_city}, {seg4.arrival_country}</div>
+                    <div className="text-gray-500 text-[10px]">{seg4.arrival_airport_name}</div>
+                    {seg4.arrival_terminal && (
+                      <div className="text-gray-500 text-[10px]">{seg4.arrival_terminal}</div>
+                    )}
+                  </div>
+
+                  {/* Class */}
+                  <div className="col-span-1 text-right">
+                    <div className="font-bold text-gray-800">{seg4.duration || '3h 50m'}</div>
+                    <div className="text-gray-500 text-[10px] mt-0.5">{seg4.cabin_class || 'Economy'}</div>
+                  </div>
+
+                </div>
+
+                <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
+                  <div>Fare Type : {seg4.fare_type || 'NA'}</div>
+                  <div>Baggage Information</div>
+                  <div className="font-semibold text-gray-800">Adult - Check-in: {seg4.checkin_baggage || '30KG'}, Cabin : {seg4.cabin_baggage || '7KG'},</div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
-        {/* Leg 4 details */}
-        <div>
-          <div className="grid grid-cols-12 gap-2 items-center">
-            
-            {/* Airline Logo */}
-            <div className="col-span-3 flex items-center space-x-2 text-left">
-              <img 
-                src={`/static/airlinelogo/${seg4.airline_logo || 'oman-air-logo-circular.png'}`} 
-                alt={seg4.airline_name || 'Airline Logo'} 
-                className="w-7 h-7 object-contain inline-block mr-1"
-              />
-              <div>
-                <div className="font-bold text-[11px] text-gray-900 leading-none">{seg4.airline_name || 'Oman Aviation'}</div>
-                <div className="text-gray-500 font-mono text-[10px] mt-1">{seg4.airline_code || 'WY'}- {seg4.flight_number || '253'}</div>
-              </div>
+        {/* ========================================================
+            PASSENGER DETAILS TABLE (RETURN)
+            ======================================================== */}
+        {isInboundActive && (
+          <div className="border border-gray-300 rounded mb-8 overflow-hidden">
+            <div className="bg-gray-200 border-b border-gray-300 px-4 py-2 font-bold text-xs text-gray-800 text-left">
+              Passenger Details ( {booking.passengers.length} )
             </div>
-
-            {/* Departure */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Departure</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg4.departure_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg4.departure_city}, {seg4.departure_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg4.departure_airport_name}</div>
-              {seg4.departure_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg4.departure_terminal}</div>
-              )}
-            </div>
-
-            {/* Stop Indicator */}
-            <div className="col-span-2 text-center flex flex-col items-center justify-center">
-              <span className="text-[9px] text-gray-500 font-bold">Non-Stop</span>
-              <div className="w-24 flex items-center justify-center mt-1">
-                <div className="h-[1.5px] bg-gray-400 w-full relative">
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t border-r border-gray-500 rotate-45"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Arrival */}
-            <div className="col-span-3 text-left">
-              <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Arrival</div>
-              <div className="font-bold text-gray-900 mt-0.5">{formatFlightDate(seg4.arrival_time)}</div>
-              <div className="font-semibold text-gray-800 text-[11px]">{seg4.arrival_city}, {seg4.arrival_country}</div>
-              <div className="text-gray-500 text-[10px]">{seg4.arrival_airport_name}</div>
-              {seg4.arrival_terminal && (
-                <div className="text-gray-500 text-[10px]">{seg4.arrival_terminal}</div>
-              )}
-            </div>
-
-            {/* Class */}
-            <div className="col-span-1 text-right">
-              <div className="font-bold text-gray-800">{seg4.duration || '3h 50m'}</div>
-              <div className="text-gray-500 text-[10px] mt-0.5">{seg4.cabin_class || 'Economy'}</div>
-            </div>
-
+            <table className="min-w-full divide-y divide-gray-300 text-left text-xs">
+              <thead>
+                <tr className="bg-gray-50 font-bold text-gray-700">
+                  <th className="px-4 py-2 border-r border-gray-300 w-12 text-center">Sr.</th>
+                  <th className="px-4 py-2 border-r border-gray-300 w-5/12">Name, DOB, Passport, & FF</th>
+                  <th className="px-4 py-2 border-r border-gray-300 w-3/12">PNR & Ticket No.</th>
+                  <th className="px-4 py-2">Meal, Baggage, Seat & Other Preference</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {booking.passengers.map((p, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
+                    <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
+                      <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
+                      <div className="pt-2">
+                        {renderSingleBarcode(idx)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
+                      {seg3.is_active !== false && (
+                        <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                      )}
+                      {seg4.is_active !== false && (
+                        <div>{seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-gray-400 italic"></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          <div className="mt-4 text-[10px] text-gray-600 space-y-0.5">
-            <div>Fare Type : {seg4.fare_type || 'NA'}</div>
-            <div>Baggage Information</div>
-            <div className="font-semibold text-gray-800">Adult - Check-in: {seg4.checkin_baggage || '30KG'}, Cabin : {seg4.cabin_baggage || '7KG'},</div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ========================================================
-          PASSENGER DETAILS TABLE (RETURN)
-          ======================================================== */}
-      <div className="border border-gray-300 rounded mb-8 overflow-hidden">
-        <div className="bg-gray-200 border-b border-gray-300 px-4 py-2 font-bold text-xs text-gray-800 text-left">
-          Passenger Details ( {booking.passengers.length} )
-        </div>
-        <table className="min-w-full divide-y divide-gray-300 text-left text-xs">
-          <thead>
-            <tr className="bg-gray-50 font-bold text-gray-700">
-              <th className="px-4 py-2 border-r border-gray-300 w-12 text-center">Sr.</th>
-              <th className="px-4 py-2 border-r border-gray-300 w-5/12">Name, DOB, Passport, & FF</th>
-              <th className="px-4 py-2 border-r border-gray-300 w-3/12">PNR & Ticket No.</th>
-              <th className="px-4 py-2">Meal, Baggage, Seat & Other Preference</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {booking.passengers.map((p, idx) => (
-              <tr key={idx}>
-                <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
-                <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
-                  <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
-                  <div className="pt-2">
-                    {renderSingleBarcode(idx)}
-                  </div>
-                </td>
-                <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
-                  <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
-                  <div>{seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">ONFDOJ</strong></div>
-                </td>
-                <td className="px-4 py-4 text-gray-400 italic"></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        )}
 
       {/* ========================================================
           IMPORTANT INFORMATION

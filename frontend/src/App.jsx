@@ -84,7 +84,8 @@ const INITIAL_MOCK_DATA = {
       "fare_type": "NA",
       "checkin_baggage": "30KG",
       "cabin_baggage": "7KG",
-      "layover_duration": "4h 15m"
+      "layover_duration": "4h 15m",
+      "is_active": true
     },
     {
       "sequence": 2,
@@ -107,7 +108,8 @@ const INITIAL_MOCK_DATA = {
       "fare_type": "NA",
       "checkin_baggage": "30KG",
       "cabin_baggage": "7KG",
-      "layover_duration": null
+      "layover_duration": null,
+      "is_active": true
     },
     {
       "sequence": 3,
@@ -130,7 +132,8 @@ const INITIAL_MOCK_DATA = {
       "fare_type": "NA",
       "checkin_baggage": "30KG",
       "cabin_baggage": "7KG",
-      "layover_duration": "4h 10m"
+      "layover_duration": "4h 10m",
+      "is_active": true
     },
     {
       "sequence": 4,
@@ -153,7 +156,8 @@ const INITIAL_MOCK_DATA = {
       "fare_type": "NA",
       "checkin_baggage": "30KG",
       "cabin_baggage": "7KG",
-      "layover_duration": null
+      "layover_duration": null,
+      "is_active": true
     }
   ],
   "passengers": [
@@ -371,7 +375,8 @@ function App() {
               fare_type: s.fare_type,
               checkin_baggage: s.baggage.check_in,
               cabin_baggage: s.baggage.cabin,
-              layover_duration: s.layover ? s.layover.duration : null
+              layover_duration: s.layover ? s.layover.duration : null,
+              is_active: s.is_active !== undefined ? s.is_active : true
             };
           })
         };
@@ -784,7 +789,7 @@ function App() {
               <div className="space-y-6">
 
                 {/* Segment 1 */}
-                <div className="space-y-4 border-b border-slate-100 pb-5">
+                <div className={`space-y-4 border-b border-slate-100 pb-5 transition-all duration-300 ${booking.segments[0]?.is_active === false ? 'opacity-55' : ''}`}>
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-1.5 flex-1 mr-2">
                       <span className="font-extrabold text-sm text-slate-900 whitespace-nowrap">1. Leg:</span>
@@ -804,7 +809,20 @@ function App() {
                         className="font-extrabold text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-yellow-500 focus:bg-white flex-1 font-sans"
                       />
                     </div>
-                    <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 1</span>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex items-center space-x-1 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={booking.segments[0]?.is_active !== false}
+                          onChange={(e) => handleSegmentChange(1, 'is_active', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-yellow-500 cursor-pointer rounded border-slate-300"
+                        />
+                        <span className={`text-[10px] font-bold uppercase font-mono transition-colors duration-300 ${booking.segments[0]?.is_active !== false ? 'text-green-600' : 'text-slate-400'}`}>
+                          {booking.segments[0]?.is_active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </label>
+                      <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200/50">Seq 1</span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
@@ -965,7 +983,7 @@ function App() {
                 </div>
 
                 {/* Segment 2 */}
-                <div className="space-y-4">
+                <div className={`space-y-4 transition-all duration-300 ${booking.segments[1]?.is_active === false ? 'opacity-55' : ''}`}>
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-1.5 flex-1 mr-2">
                       <span className="font-extrabold text-sm text-slate-900 whitespace-nowrap">2. Leg:</span>
@@ -985,7 +1003,20 @@ function App() {
                         className="font-extrabold text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-yellow-500 focus:bg-white flex-1 font-sans"
                       />
                     </div>
-                    <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 2</span>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex items-center space-x-1 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={booking.segments[1]?.is_active !== false}
+                          onChange={(e) => handleSegmentChange(2, 'is_active', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-yellow-500 cursor-pointer rounded border-slate-300"
+                        />
+                        <span className={`text-[10px] font-bold uppercase font-mono transition-colors duration-300 ${booking.segments[1]?.is_active !== false ? 'text-green-600' : 'text-slate-400'}`}>
+                          {booking.segments[1]?.is_active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </label>
+                      <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200/50">Seq 2</span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
@@ -1144,7 +1175,7 @@ function App() {
               <div className="space-y-6">
 
                 {/* Segment 3 */}
-                <div className="space-y-4 border-b border-slate-100 pb-5">
+                <div className={`space-y-4 border-b border-slate-100 pb-5 transition-all duration-300 ${booking.segments[2]?.is_active === false ? 'opacity-55' : ''}`}>
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-1.5 flex-1 mr-2">
                       <span className="font-extrabold text-sm text-slate-900 whitespace-nowrap">3. Leg:</span>
@@ -1164,7 +1195,20 @@ function App() {
                         className="font-extrabold text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-yellow-500 focus:bg-white flex-1 font-sans"
                       />
                     </div>
-                    <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 3</span>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex items-center space-x-1 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={booking.segments[2]?.is_active !== false}
+                          onChange={(e) => handleSegmentChange(3, 'is_active', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-yellow-500 cursor-pointer rounded border-slate-300"
+                        />
+                        <span className={`text-[10px] font-bold uppercase font-mono transition-colors duration-300 ${booking.segments[2]?.is_active !== false ? 'text-green-600' : 'text-slate-400'}`}>
+                          {booking.segments[2]?.is_active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </label>
+                      <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200/50">Seq 3</span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
@@ -1325,7 +1369,7 @@ function App() {
                 </div>
 
                 {/* Segment 4 */}
-                <div className="space-y-4">
+                <div className={`space-y-4 transition-all duration-300 ${booking.segments[3]?.is_active === false ? 'opacity-55' : ''}`}>
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-1.5 flex-1 mr-2">
                       <span className="font-extrabold text-sm text-slate-900 whitespace-nowrap">4. Leg:</span>
@@ -1345,7 +1389,20 @@ function App() {
                         className="font-extrabold text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-yellow-500 focus:bg-white flex-1 font-sans"
                       />
                     </div>
-                    <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 4</span>
+                    <div className="flex items-center space-x-2">
+                      <label className="flex items-center space-x-1 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={booking.segments[3]?.is_active !== false}
+                          onChange={(e) => handleSegmentChange(4, 'is_active', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-yellow-500 cursor-pointer rounded border-slate-300"
+                        />
+                        <span className={`text-[10px] font-bold uppercase font-mono transition-colors duration-300 ${booking.segments[3]?.is_active !== false ? 'text-green-600' : 'text-slate-400'}`}>
+                          {booking.segments[3]?.is_active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </label>
+                      <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200/50">Seq 4</span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">

@@ -46,7 +46,8 @@ def get_booking_details(request, booking_id):
             "layover": {
                 "duration": seg.layover_duration,
                 "minutes": seg.layover_minutes
-            } if seg.layover_duration else None
+            } if seg.layover_duration else None,
+            "is_active": seg.is_active
         })
 
     # Serialize passengers
@@ -192,7 +193,8 @@ def save_booking_details(request):
                 fare_type=s_data.get('fare_type', 'NA'),
                 checkin_baggage=s_data.get('checkin_baggage', '30KG'),
                 cabin_baggage=s_data.get('cabin_baggage', '7KG'),
-                layover_duration=s_data.get('layover_duration')
+                layover_duration=s_data.get('layover_duration'),
+                is_active=s_data.get('is_active', True)
             )
             saved_segments.append(seg)
             
@@ -503,7 +505,8 @@ def parse_ocr_text(text):
             "fare_type": "NA",
             "checkin_baggage": "30KG",
             "cabin_baggage": "7KG",
-            "layover_duration": arr.get("layover_duration")
+            "layover_duration": arr.get("layover_duration"),
+            "is_active": True
         })
         
     airline_logo = "oman-air-logo-circular.png"

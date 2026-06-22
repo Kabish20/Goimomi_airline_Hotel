@@ -60,6 +60,7 @@ class FlightSegment(models.Model):
     
     layover_duration = models.CharField(max_length=30, blank=True, null=True, help_text="Layover timer after this segment, e.g. 4h 15m")
     layover_minutes = models.IntegerField(blank=True, null=True)
+    is_active = models.BooleanField(default=True, help_text="Whether this segment is active and displayed on the printable ticket")
 
     class Meta:
         ordering = ['sequence']
