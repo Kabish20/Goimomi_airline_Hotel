@@ -316,6 +316,14 @@ function App() {
   };
 
   useEffect(() => {
+    if (booking && booking.booking_id) {
+      document.title = `Airticket Creator - ${booking.booking_id}`;
+    } else {
+      document.title = 'Airticket Creator';
+    }
+  }, [booking]);
+
+  useEffect(() => {
     // Attempt to fetch from Django API first
     fetch(`${API_BASE_URL}/api/booking/TJ1189178071008/`)
       .then(res => {
