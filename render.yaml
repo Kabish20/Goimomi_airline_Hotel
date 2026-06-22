@@ -2,7 +2,7 @@ services:
   # Django Backend Service
   - type: web
     name: airticket-backend
-    env: python
+    runtime: python
     buildCommand: chmod +x build.sh && ./build.sh
     startCommand: gunicorn airticket_project.wsgi:application
     envVars:
@@ -20,10 +20,10 @@ services:
   # React Frontend Service
   - type: web
     name: airticket-frontend
-    env: static
+    runtime: static
     rootDirectory: frontend
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
