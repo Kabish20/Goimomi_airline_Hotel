@@ -236,8 +236,8 @@ export default function PrintableTicket({ booking }) {
 
   return (
     <div className="print-area w-full max-w-[850px] bg-white text-black p-8 font-sans border border-gray-300 shadow-md text-[12px] leading-normal select-none">
-      
-      {/* Header (Jun 18, 2026 6:27 PM & Booking ID) */}
+      <div className="print-page-1">
+        {/* Header (Jun 18, 2026 6:27 PM & Booking ID) */}
       <div className="border-b border-gray-300 pb-2 mb-4 text-left">
         <div className="text-gray-900 font-normal">{formatHeaderDate(booking.booking_date)}</div>
         <div className="text-gray-900 font-normal mt-0.5">Booking ID : {booking.booking_id}</div>
@@ -432,11 +432,13 @@ export default function PrintableTicket({ booking }) {
           </tbody>
         </table>
       </div>
-
-      {/* ========================================================
-          INBOUND CONTAINER
-          ======================================================== */}
-      <div className="border border-gray-300 rounded mb-6 p-4 space-y-4 break-before-page">
+      </div>
+ 
+      <div className="print-page-2">
+        {/* ========================================================
+            INBOUND CONTAINER
+            ======================================================== */}
+        <div className="border border-gray-300 rounded mb-6 p-4 space-y-4">
         
         {/* Inbound Header */}
         <div className="flex justify-between items-start">
@@ -706,6 +708,8 @@ export default function PrintableTicket({ booking }) {
 
       </div>
 
+      </div>
+ 
     </div>
   );
 }

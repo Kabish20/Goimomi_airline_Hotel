@@ -9,10 +9,10 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-oman-gold/30 selection:text-oman-navy-dark;
 }
 
-/* Page Setup for A4 PDF generation */
+/* Page Setup for A4 PDF generation - margin 0 hides browser headers/footers */
 @page {
   size: A4;
-  margin: 12mm 15mm !important;
+  margin: 0 !important;
 }
 
 /* Custom Print styling for PDF download */
@@ -35,6 +35,19 @@ body {
   body {
     background-color: #ffffff !important;
     color: #000000 !important;
+  }
+
+  /* Custom page-specific paddings to act as page margins */
+  .print-page-1 {
+    padding: 12mm 15mm 0 15mm !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-page-2 {
+    padding: 12mm 15mm 12mm 15mm !important;
+    box-sizing: border-box !important;
+    page-break-before: always !important;
+    break-before: page !important;
   }
 
   .no-print {
