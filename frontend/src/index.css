@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  @apply bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-oman-gold/30 selection:text-oman-navy-dark;
+}
+
+/* Page Setup for A4 PDF generation */
+@page {
+  size: A4;
+  margin: 12mm 15mm !important;
+}
+
+/* Custom Print styling for PDF download */
+@media print {
+  /* Reset all parent container layouts to prevent margins/grids side-effects */
+  .min-h-screen,
+  div.max-w-\[1550px\],
+  section.lg\:col-span-7 {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Hide everything except the ticket element marked with print-area */
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Tighten print layout to fit exactly on 2 pages */
+  .print-area {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important; /* Let page margins handle padding */
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #000000 !important;
+    font-size: 11px !important; /* Slightly smaller base font size on print to guarantee 2-page limit */
+  }
+
+  .print-area .mb-6 {
+    margin-bottom: 8px !important;
+  }
+  .print-area .mb-8 {
+    margin-bottom: 8px !important;
+  }
+  .print-area .p-4 {
+    padding: 8px 12px !important;
+  }
+  .print-area .pb-4 {
+    padding-bottom: 6px !important;
+  }
+  .print-area .mt-4 {
+    margin-top: 8px !important;
+  }
+  .print-area .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 6px !important;
+  }
+  
+  /* Compact table cells */
+  .print-area table td, .print-area table th {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  .print-area table td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  
+  /* Layover banner scaling */
+  .print-area .py-1\.5 {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+  }
+  
+  /* Dangerous goods vertical gaps */
+  .print-area .gap-y-4 {
+    row-gap: 6px !important;
+  }
+  
+  /* Shrink barcodes slightly */
+  .print-area svg {
+    max-height: 38px !important;
+  }
+
+  /* Prevent item splitting */
+  .print-area .border, .print-area table {
+    break-inside: avoid !important;
+  }
+
+  /* Force background colors and borders to print properly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
