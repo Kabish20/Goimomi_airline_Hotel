@@ -6,10 +6,7 @@ const getApiBaseUrl = () => {
   }
   const hostname = window.location.hostname;
   if (hostname.endsWith('.onrender.com')) {
-    const baseName = hostname.replace('.onrender.com', '');
-    if (!baseName.endsWith('-backend')) {
-      return `https://${baseName}-backend.onrender.com`;
-    }
+    return 'https://goimomi-airline-hotel-23tj.onrender.com';
   }
   return 'http://127.0.0.1:8080';
 };
