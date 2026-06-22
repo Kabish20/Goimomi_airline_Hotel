@@ -203,7 +203,7 @@ function App() {
       .then(res => {
         if (!res.ok) {
           return res.json().then(errData => {
-            throw new Error(errData.error || "Failed to process screenshot OCR");
+            throw new Error(errData.error || "Failed to process ticket file");
           });
         }
         return res.json();
@@ -211,7 +211,7 @@ function App() {
       .then(resData => {
         if (resData.success && resData.data) {
           const extracted = resData.data;
-          
+
           setBooking(prev => {
             const updated = { ...prev };
             const newHighlights = {};
@@ -238,7 +238,7 @@ function App() {
 
             if (extracted.passengers && extracted.passengers.length > 0) {
               const ocrP = extracted.passengers[0];
-              
+
               if (updated.passengers.length === 0) {
                 updated.passengers = [{
                   full_name: ocrP.full_name || '',
@@ -291,7 +291,7 @@ function App() {
               });
               newHighlights.segments = true;
             }
-            
+
             setHighlightedFields(newHighlights);
             setTimeout(() => {
               setHighlightedFields({});
@@ -302,12 +302,12 @@ function App() {
 
           setOcrSuccess(true);
         } else {
-          throw new Error("No data could be extracted from this image.");
+          throw new Error("No data could be extracted from this file.");
         }
       })
       .catch(err => {
         console.error("OCR upload error:", err);
-        setOcrError(err.message || "Failed to process screenshot OCR");
+        setOcrError(err.message || "Failed to process ticket file");
       })
       .finally(() => {
         setOcrUploading(false);
@@ -480,7 +480,7 @@ function App() {
   const handleSaveAndDownload = () => {
     setSaving(true);
     setSaveError(null);
-    
+
     // Save to the database first
     fetch(`${API_BASE_URL}/api/booking/save/`, {
       method: 'POST',
@@ -511,16 +511,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
-      
+
       {/* Top Header Navbar - Hidden when printing */}
       <header className="no-print bg-white border-b border-slate-200 px-6 py-4 flex justify-end sticky top-0 z-50 shadow-sm">
         <div className="flex items-center space-x-4">
           {autoSaveStatus && (
-            <span className={`text-[10px] font-bold font-mono tracking-wider uppercase transition-all duration-300 ${
-              autoSaveStatus.includes('failed') ? 'text-red-500' :
-              autoSaveStatus.includes('Saving') ? 'text-yellow-600 animate-pulse' :
-              'text-green-600'
-            }`}>
+            <span className={`text-[10px] font-bold font-mono tracking-wider uppercase transition-all duration-300 ${autoSaveStatus.includes('failed') ? 'text-red-500' :
+                autoSaveStatus.includes('Saving') ? 'text-yellow-600 animate-pulse' :
+                  'text-green-600'
+              }`}>
               {autoSaveStatus.includes('Saving') ? '⏳ ' : autoSaveStatus.includes('saved') ? '✓ ' : '⚠️ '}
               {autoSaveStatus}
             </span>
@@ -552,45 +551,39 @@ function App() {
 
       {/* Main Grid Splitter */}
       <div className="max-w-[1550px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+
         {/* LEFT COLUMN: Input form editor - Hidden when printing */}
         <section className="no-print lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden sticky top-24">
-          
+
           {/* Form Tabs */}
           <div className="flex border-b border-slate-200 bg-slate-50 p-1">
             <button
               onClick={() => setActiveFormTab('general')}
-              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${
-                (highlightedFields.booking_id || highlightedFields.booking_date || highlightedFields.passenger) ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
-              } ${
-                activeFormTab === 'general'
+              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${(highlightedFields.booking_id || highlightedFields.booking_date || highlightedFields.passenger) ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
+                } ${activeFormTab === 'general'
                   ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
             >
               General & Passenger {(highlightedFields.booking_id || highlightedFields.booking_date || highlightedFields.passenger) && '✨'}
             </button>
             <button
               onClick={() => setActiveFormTab('outbound')}
-              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${
-                highlightedFields.segments ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
-              } ${
-                activeFormTab === 'outbound'
+              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${highlightedFields.segments ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
+                } ${activeFormTab === 'outbound'
                   ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
             >
               Outbound Legs {highlightedFields.segments && '✨'}
             </button>
             <button
               onClick={() => setActiveFormTab('return')}
-              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${
-                highlightedFields.segments ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
-              } ${
-                activeFormTab === 'return'
+              className={`flex-1 py-3 px-3 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-500 ${highlightedFields.segments ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200 shadow-sm' : ''
+                } ${activeFormTab === 'return'
                   ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
             >
               Return Legs {highlightedFields.segments && '✨'}
             </button>
@@ -598,55 +591,54 @@ function App() {
 
           {/* Form Content */}
           <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6 text-xs">
-            
+
             {activeFormTab === 'general' && (
               <div className="space-y-5">
-                
-                {/* Screenshot Auto-fill Dropzone */}
+
+                {/* Ticket Auto-fill Dropzone */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative overflow-hidden transition-all hover:shadow-md">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Auto-fill from Screenshot</span>
+                    <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Auto-fill from Ticket (PDF/Image)</span>
                     {ocrSuccess && (
                       <span className="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
                         ✓ Extracted
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="relative group">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf"
                       onChange={handleOcrUpload}
                       disabled={ocrUploading}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
                       id="screenshot-ocr-upload"
                     />
-                    <div className={`border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center space-y-2 transition-all ${
-                      ocrUploading ? 'border-yellow-400 bg-yellow-50/10' :
-                      ocrSuccess ? 'border-green-400 bg-green-50/10' :
-                      'border-slate-300 hover:border-yellow-500 bg-white hover:bg-slate-50/55'
-                    }`}>
+                    <div className={`border-2 border-dashed rounded-lg p-5 flex flex-col items-center justify-center space-y-2 transition-all ${ocrUploading ? 'border-yellow-400 bg-yellow-50/10' :
+                        ocrSuccess ? 'border-green-400 bg-green-50/10' :
+                          'border-slate-300 hover:border-yellow-500 bg-white hover:bg-slate-50/55'
+                      }`}>
                       {ocrUploading ? (
                         <>
                           <div className="w-7 h-7 border-3 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-                          <p className="font-bold text-yellow-600 animate-pulse text-[11px]">Analyzing Screenshot...</p>
-                          <p className="text-[9px] text-slate-400">Extracting ticket data via OCR</p>
+                          <p className="font-bold text-yellow-600 animate-pulse text-[11px]">Analyzing Ticket...</p>
+                          <p className="text-[9px] text-slate-400">Extracting flight details from file</p>
                         </>
                       ) : (
                         <>
-                          <span className="text-xl">📸</span>
+                          <span className="text-xl">📄</span>
                           <p className="font-bold text-slate-700 text-[11px] group-hover:text-yellow-600 transition-colors">
-                            {ocrSuccess ? 'Upload another screenshot' : 'Upload Ticket Screenshot'}
+                            {ocrSuccess ? 'Upload another ticket/image' : 'Upload Ticket File (PDF, PNG, JPEG)'}
                           </p>
                           <p className="text-[9px] text-slate-400 text-center">
-                            Drag & drop or click to upload. Autofills Booking ID, Date, Airline, Passenger details.
+                            Drag & drop or click to upload PDF, PNG, or JPEG. Autofills Booking ID, Date, Airline, Passenger details.
                           </p>
                         </>
                       )}
                     </div>
                   </div>
-                  
+
                   {ocrError && (
                     <div className="text-[10px] text-red-500 font-semibold bg-red-50 p-2 rounded border border-red-100 flex items-start space-x-1">
                       <span>⚠️</span>
@@ -656,17 +648,16 @@ function App() {
                 </div>
 
                 <h2 className="font-extrabold text-sm text-slate-900 border-b border-slate-100 pb-2">Booking Details</h2>
-                
-                 <div className="grid grid-cols-2 gap-4">
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="font-bold text-slate-500">Booking ID</label>
                     <input
                       type="text"
                       value={booking.booking_id}
                       onChange={(e) => handleBookingChange('booking_id', e.target.value)}
-                      className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono transition-all duration-500 ${
-                        highlightedFields.booking_id ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                      }`}
+                      className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono transition-all duration-500 ${highlightedFields.booking_id ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                        }`}
                     />
                   </div>
                   <div className="space-y-1">
@@ -675,9 +666,8 @@ function App() {
                       type="datetime-local"
                       value={booking.booking_date ? booking.booking_date.substring(0, 16) : ''}
                       onChange={(e) => handleBookingChange('booking_date', e.target.value)}
-                      className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${
-                        highlightedFields.booking_date ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                      }`}
+                      className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.booking_date ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                        }`}
                     />
                   </div>
                 </div>
@@ -699,9 +689,8 @@ function App() {
                         return { ...prev, segments: updatedSegs };
                       });
                     }}
-                    className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-sans text-xs transition-all duration-500 ${
-                      highlightedFields.airline ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                    }`}
+                    className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-sans text-xs transition-all duration-500 ${highlightedFields.airline ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                      }`}
                   >
                     {AIRLINE_LOGOS.map(logo => (
                       <option key={logo.value} value={logo.value}>{logo.label}</option>
@@ -710,7 +699,7 @@ function App() {
                 </div>
 
                 <h2 className="font-extrabold text-sm text-slate-900 border-b border-slate-100 pb-2 pt-2">Passenger Identity</h2>
-                
+
                 <div className="space-y-6">
                   {booking.passengers.map((p, index) => (
                     <div key={index} className="space-y-4 border border-slate-100 p-4 rounded-xl relative bg-slate-50/50">
@@ -734,9 +723,8 @@ function App() {
                             type="text"
                             value={p.title || 'MR'}
                             onChange={(e) => handlePassengerChange(index, 'title', e.target.value)}
-                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${
-                              highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                            }`}
+                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                              }`}
                             placeholder="e.g. MR"
                           />
                         </div>
@@ -746,9 +734,8 @@ function App() {
                             type="text"
                             value={p.full_name || ''}
                             onChange={(e) => handlePassengerChange(index, 'full_name', e.target.value)}
-                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${
-                              highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                            }`}
+                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                              }`}
                             placeholder="MR IMTIYAZ SAIT RAZACK SAIT"
                           />
                         </div>
@@ -761,9 +748,8 @@ function App() {
                             type="date"
                             value={p.date_of_birth || ''}
                             onChange={(e) => handlePassengerChange(index, 'date_of_birth', e.target.value)}
-                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono transition-all duration-500 ${
-                              highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                            }`}
+                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                              }`}
                           />
                         </div>
                         <div className="space-y-1">
@@ -772,9 +758,8 @@ function App() {
                             type="text"
                             value={p.other_info || ''}
                             onChange={(e) => handlePassengerChange(index, 'other_info', e.target.value)}
-                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${
-                              highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                            }`}
+                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                              }`}
                             placeholder="( A )"
                           />
                         </div>
@@ -797,7 +782,7 @@ function App() {
             {/* OUTBOUND SEGMENTS (1 & 2) */}
             {activeFormTab === 'outbound' && (
               <div className="space-y-6">
-                
+
                 {/* Segment 1 */}
                 <div className="space-y-4 border-b border-slate-100 pb-5">
                   <div className="flex justify-between items-center w-full">
@@ -821,7 +806,7 @@ function App() {
                     </div>
                     <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 1</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
@@ -1002,7 +987,7 @@ function App() {
                     </div>
                     <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 2</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
@@ -1157,7 +1142,7 @@ function App() {
             {/* RETURN SEGMENTS (3 & 4) */}
             {activeFormTab === 'return' && (
               <div className="space-y-6">
-                
+
                 {/* Segment 3 */}
                 <div className="space-y-4 border-b border-slate-100 pb-5">
                   <div className="flex justify-between items-center w-full">
@@ -1181,7 +1166,7 @@ function App() {
                     </div>
                     <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 3</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
@@ -1362,7 +1347,7 @@ function App() {
                     </div>
                     <span className="text-[10px] text-yellow-600 font-mono whitespace-nowrap">Sequence 4</span>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
@@ -1523,7 +1508,7 @@ function App() {
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Document Preview</span>
             <span className="text-[10px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md font-mono">1:1 Printed Ratio</span>
           </div>
-          
+
           {/* Printable Ticket Preview */}
           <PrintableTicket booking={booking} />
         </section>

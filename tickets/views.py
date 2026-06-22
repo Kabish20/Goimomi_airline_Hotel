@@ -528,17 +528,64 @@ def upload_screenshot(request):
     image_file = request.FILES['screenshot']
     text = ""
     ocr_source = "None"
-    # 1. Try pytesseract first
-    try:
-        from PIL import Image
-        import pytesseract
-        img = Image.open(image_file)
-        text = pytesseract.image_to_string(img)
-        if text.strip():
-            ocr_source = "pytesseract"
-    except Exception as e:
-        print(f"pytesseract failed: {e}")
-    # 2. Fall back to OCR.space API
+    
+    # Check file extension or mime type for PDF
+    filename = image_file.name.lower() if image_file.name else ""
+    is_pdf = filename.endswith('.pdf') or image_file.content_type == 'application/pdf'
+    
+    # 1. If PDF, try extracting text offline using pdfplumber
+    if is_pdf:
+        try:
+            import pdfplumber
+            image_file.seek(0)
+            with pdfplumber.open(image_file) as pdf:
+                pdf_text = ""
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        pdf_text += page_text + "\n"
+                if pdf_text.strip():
+                    text = pdf_text
+                    ocr_source = "pdfplumber"
+        except Exception as e:
+            print(f"pdfplumber extraction failed: {e}")
+
+    # 2. Try pytesseract first (only for images)
+    if not text.strip() and not is_pdf:
+        try:
+            from PIL import Image
+            import pytesseract
+            import os
+            import subprocess
+            
+            # Check if tesseract is in PATH; if not, configure standard Windows paths
+            tesseract_executable = 'tesseract'
+            try:
+                subprocess.run([tesseract_executable, '--version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except FileNotFoundError:
+                common_paths = [
+                    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+                ]
+                user_profile = os.environ.get('USERPROFILE')
+                if user_profile:
+                    common_paths.append(os.path.join(user_profile, r"AppData\Local\Programs\Tesseract-OCR\tesseract.exe"))
+                    common_paths.append(os.path.join(user_profile, r"AppData\Local\Tesseract-OCR\tesseract.exe"))
+                
+                for path in common_paths:
+                    if os.path.exists(path):
+                        pytesseract.pytesseract.tesseract_cmd = path
+                        break
+            
+            image_file.seek(0)
+            img = Image.open(image_file)
+            text = pytesseract.image_to_string(img)
+            if text.strip():
+                ocr_source = "pytesseract"
+        except Exception as e:
+            print(f"pytesseract failed: {e}")
+
+    # 3. Fall back to OCR.space API (works for both images and PDFs)
     if not text.strip():
         try:
             import requests
@@ -549,7 +596,7 @@ def upload_screenshot(request):
                 'OCREngine': '2',
             }
             files = {'file': (image_file.name, image_file.read(), image_file.content_type)}
-            response = requests.post('https://api.ocr.space/parse/image', files=files, data=payload, timeout=10)
+            response = requests.post('https://api.ocr.space/parse/image', files=files, data=payload, timeout=15)
             if response.status_code == 200:
                 result = response.json()
                 if not result.get('IsErroredOnProcessing', False):
@@ -563,8 +610,10 @@ def upload_screenshot(request):
                 print(f"ocr.space response code: {response.status_code}")
         except Exception as e:
             print(f"ocr.space fallback failed: {e}")
+
     if not text.strip():
-        return JsonResponse({"error": "Failed to extract text from image. Make sure Tesseract is installed locally or you have an internet connection."}, status=500)
+        return JsonResponse({"error": "Failed to extract text from file. Make sure it's a readable PDF, Tesseract is installed locally, or you have an internet connection."}, status=500)
+    
     parsed_data = parse_ocr_text(text)
     return JsonResponse({
         "success": True,
