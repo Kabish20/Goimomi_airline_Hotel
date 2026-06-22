@@ -83,9 +83,16 @@ WSGI_APPLICATION = 'airticket_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+if os.environ.get('RENDER'):
+    # Internal Render URL
+    DB_URL = "postgresql://goimomi_airline_user:d6sslRxyVyH5hGI3ABNxns7ShIffVyJq@dpg-d8sh6efavr4c73fpqb1g-a/goimomi_airline"
+else:
+    # External Render URL (for local development)
+    DB_URL = "postgresql://goimomi_airline_user:d6sslRxyVyH5hGI3ABNxns7ShIffVyJq@dpg-d8sh6efavr4c73fpqb1g-a.oregon-postgres.render.com/goimomi_airline"
+
 DATABASES = {
     'default': dj_database_url.config(
-        default="postgresql://goimomi_airline_user:d6sslRxyVyH5hGI3ABNxns7ShIffVyJq@dpg-d8sh6efavr4c73fpqb1g-a.oregon-postgres.render.com/goimomi_airline",
+        default=DB_URL,
         conn_max_age=600
     )
 }
