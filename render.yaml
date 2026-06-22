@@ -1,0 +1,37 @@
+services:
+  # Django Backend Service
+  - type: web
+    name: airticket-backend
+    env: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn airticket_project.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: airticket-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: 3.11.6
+
+  # React Frontend Service
+  - type: web
+    name: airticket-frontend
+    env: static
+    rootDirectory: frontend
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: airticket-backend
+          property: host
+
+databases:
+  - name: airticket-db
+    databaseName: airticket
+    user: airticket_user

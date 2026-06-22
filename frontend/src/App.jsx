@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PrintableTicket from './components/PrintableTicket';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 // Complete mock dataset for robust offline fallback
 const AIRLINE_LOGOS = [
   { value: "oman-air-logo-circular.png", label: "Oman Air" },
@@ -185,7 +187,7 @@ function App() {
     const formData = new FormData();
     formData.append('screenshot', file);
 
-    fetch('http://127.0.0.1:8000/api/booking/upload-screenshot/', {
+    fetch(`${API_BASE_URL}/api/booking/upload-screenshot/`, {
       method: 'POST',
       body: formData,
     })
@@ -306,7 +308,7 @@ function App() {
 
   useEffect(() => {
     // Attempt to fetch from Django API first
-    fetch('http://127.0.0.1:8000/api/booking/TJ1189178071008/')
+    fetch(`${API_BASE_URL}/api/booking/TJ1189178071008/`)
       .then(res => {
         if (!res.ok) throw new Error("API server responded with error status");
         return res.json();
@@ -374,7 +376,7 @@ function App() {
 
     const delayDebounceFn = setTimeout(() => {
       setAutoSaveStatus('Saving changes...');
-      fetch('http://127.0.0.1:8000/api/booking/save/', {
+      fetch(`${API_BASE_URL}/api/booking/save/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -463,7 +465,7 @@ function App() {
     setSaveError(null);
     
     // Save to the database first
-    fetch('http://127.0.0.1:8000/api/booking/save/', {
+    fetch(`${API_BASE_URL}/api/booking/save/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
