@@ -216,7 +216,7 @@ export default function PrintableTicket({ booking }) {
 
   const renderPreferences = (p, seqs) => {
     if (!p.segment_specific_details || p.segment_specific_details.length === 0) {
-      return <span className="text-gray-400 italic">No preference selected</span>;
+      return null;
     }
     
     const activeDetails = p.segment_specific_details.filter(d => 
@@ -226,7 +226,7 @@ export default function PrintableTicket({ booking }) {
     );
     
     if (activeDetails.length === 0) {
-      return <span className="text-gray-400 italic">No preference selected</span>;
+      return null;
     }
     
     return (

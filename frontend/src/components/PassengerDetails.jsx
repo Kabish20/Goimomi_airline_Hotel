@@ -97,9 +97,7 @@ export default function PassengerDetails({ passengers }) {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <span className="italic text-slate-500">No preference selected</span>
-                  )}
+                  ) : null}
                 </td>
               </tr>
             ))}

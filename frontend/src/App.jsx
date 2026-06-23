@@ -591,7 +591,10 @@ function App() {
       { key: 'arrival_terminal', label: 'Arrival Terminal' },
       { key: 'departure_time', label: 'Departure Time' },
       { key: 'arrival_time', label: 'Arrival Time' },
-      { key: 'duration', label: 'Duration' }
+      { key: 'duration', label: 'Duration' },
+      { key: 'fare_type', label: 'Fare Type' },
+      { key: 'checkin_baggage', label: 'Check-in Baggage' },
+      { key: 'cabin_baggage', label: 'Cabin Baggage' }
     ];
 
     for (const seg of activeSegments) {
@@ -1192,6 +1195,42 @@ function App() {
                       />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Fare Type <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[0]?.fare_type || ''}
+                        onChange={(e) => handleSegmentChange(1, 'fare_type', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. NA"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Check-in Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[0]?.checkin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(1, 'checkin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 30KG"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Cabin Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[0]?.cabin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(1, 'cabin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 7KG"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Segment 2 */}
@@ -1397,6 +1436,42 @@ function App() {
                         value={booking.segments[1]?.duration || ''}
                         onChange={(e) => handleSegmentChange(2, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Fare Type <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[1]?.fare_type || ''}
+                        onChange={(e) => handleSegmentChange(2, 'fare_type', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. NA"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Check-in Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[1]?.checkin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(2, 'checkin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 30KG"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Cabin Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[1]?.cabin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(2, 'cabin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 7KG"
                         required
                       />
                     </div>
@@ -1626,6 +1701,42 @@ function App() {
                       />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Fare Type <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[2]?.fare_type || ''}
+                        onChange={(e) => handleSegmentChange(3, 'fare_type', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. NA"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Check-in Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[2]?.checkin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(3, 'checkin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 30KG"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Cabin Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[2]?.cabin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(3, 'cabin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 7KG"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Segment 4 */}
@@ -1831,6 +1942,42 @@ function App() {
                         value={booking.segments[3]?.duration || ''}
                         onChange={(e) => handleSegmentChange(4, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Fare Type <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[3]?.fare_type || ''}
+                        onChange={(e) => handleSegmentChange(4, 'fare_type', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. NA"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Check-in Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[3]?.checkin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(4, 'checkin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 30KG"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Cabin Baggage <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={booking.segments[3]?.cabin_baggage || ''}
+                        onChange={(e) => handleSegmentChange(4, 'cabin_baggage', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs"
+                        placeholder="e.g. 7KG"
                         required
                       />
                     </div>
