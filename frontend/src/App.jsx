@@ -491,13 +491,24 @@ function App() {
     setSaving(true);
     setSaveError(null);
 
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const localDateTimeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    
+    const updatedBooking = {
+      ...booking,
+      booking_date: localDateTimeStr
+    };
+
+    setBooking(updatedBooking);
+
     // Save to the database first
     fetch(`${API_BASE_URL}/api/booking/save/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(booking),
+      body: JSON.stringify(updatedBooking),
     })
       .then(res => {
         if (!res.ok) throw new Error("Failed to save booking details to database");
