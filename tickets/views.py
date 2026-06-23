@@ -151,6 +151,8 @@ def save_booking_details(request):
             p = Passenger.objects.create(
                 booking=booking,
                 full_name=p_data.get('full_name', ''),
+                first_name=p_data.get('first_name', ''),
+                last_name=p_data.get('last_name', ''),
                 title=p_data.get('title', 'MR'),
                 date_of_birth=dob,
                 other_info=p_data.get('other_info', '')
@@ -427,7 +429,8 @@ def parse_ocr_text(text):
     arrivals = []
     for idx, d_idx in enumerate(duration_lines):
         duration_line = lines[d_idx]
-        duration = re.search(r'\b\d+h\s+\d+m\b', duration_line).group(0)
+        duration_match = re.search(r'\b\d+h\s+\d+m\b', duration_line)
+        duration = duration_match.group(0) if duration_match else ""
         
         arr_date_line = None
         arr_date_idx = -1

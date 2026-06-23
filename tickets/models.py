@@ -1,6 +1,8 @@
 from django.db import models
 
 class Booking(models.Model):
+    objects = models.Manager()
+    class DoesNotExist(Exception): pass
     booking_id = models.CharField(max_length=50, unique=True, db_index=True, help_text="Booking ID, e.g. TJ1189178071008")
     booking_date = models.DateTimeField(help_text="Date and time the booking was made")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -10,10 +12,11 @@ class Booking(models.Model):
         ordering = ['-booking_date']
 
     def __str__(self):
-        return f"Booking {self.booking_id} ({self.booking_date.strftime('%Y-%m-%d %H:%M')})"
+        return f"Booking {self.booking_id} ({self.booking_date.strftime('%Y-%m-%d %H:%M')})"  # type: ignore
 
 
 class Passenger(models.Model):
+    objects = models.Manager()
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='passengers')
     title = models.CharField(max_length=20, blank=True, null=True, help_text="e.g. MR, MRS, MS")
     first_name = models.CharField(max_length=100, blank=True, null=True)
@@ -29,6 +32,7 @@ class Passenger(models.Model):
 
 
 class FlightSegment(models.Model):
+    objects = models.Manager()
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='segments')
     sequence = models.IntegerField(default=1, help_text="Determines the sequence of flight legs in the itinerary")
     
@@ -70,6 +74,7 @@ class FlightSegment(models.Model):
 
 
 class PassengerSegmentDetail(models.Model):
+    objects = models.Manager()
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE, related_name='segment_details')
     segment = models.ForeignKey(FlightSegment, on_delete=models.CASCADE, related_name='passenger_details')
     pnr = models.CharField(max_length=50, help_text="Airline PNR for this passenger on this segment, e.g. ONFDOJ")

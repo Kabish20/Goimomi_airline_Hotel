@@ -59,6 +59,26 @@ const AIRLINE_MAPPING = {
   "singapore-airlines-logo-circular.png": { name: "Singapore Airlines", code: "SQ" }
 };
 
+const splitFullName = (fullName, title) => {
+  if (!fullName) return { firstName: '', lastName: '' };
+  let cleanName = fullName.trim();
+  if (title && cleanName.toUpperCase().startsWith(title.toUpperCase())) {
+    cleanName = cleanName.substring(title.length).trim();
+  } else {
+    const titleRegex = /^(MR|MRS|MS|MISS|DR|M\/S)\.?\s+/i;
+    cleanName = cleanName.replace(titleRegex, '');
+  }
+  const parts = cleanName.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '' };
+  }
+  const mid = Math.ceil(parts.length / 2);
+  return {
+    firstName: parts.slice(0, mid).join(' '),
+    lastName: parts.slice(mid).join(' ')
+  };
+};
+
 const INITIAL_MOCK_DATA = {
   "booking_id": "TJ1189178071008",
   "booking_date": "2026-06-18T18:27:00.000Z",
@@ -246,10 +266,13 @@ function App() {
 
             if (extracted.passengers && extracted.passengers.length > 0) {
               const ocrP = extracted.passengers[0];
+              const parsedOcrName = splitFullName(ocrP.full_name || '', ocrP.title || 'MR');
 
               if (updated.passengers.length === 0) {
                 updated.passengers = [{
                   full_name: ocrP.full_name || '',
+                  first_name: parsedOcrName.firstName,
+                  last_name: parsedOcrName.lastName,
                   title: ocrP.title || 'MR',
                   date_of_birth: ocrP.date_of_birth || '',
                   other_info: ocrP.other_info || ''
@@ -257,10 +280,15 @@ function App() {
               } else {
                 updated.passengers = updated.passengers.map((p, idx) => {
                   if (idx === 0) {
+                    const mergedFullName = ocrP.full_name || p.full_name;
+                    const mergedTitle = ocrP.title || p.title;
+                    const mergedParsed = splitFullName(mergedFullName, mergedTitle);
                     return {
                       ...p,
-                      full_name: ocrP.full_name || p.full_name,
-                      title: ocrP.title || p.title,
+                      full_name: mergedFullName,
+                      first_name: mergedParsed.firstName || p.first_name,
+                      last_name: mergedParsed.lastName || p.last_name,
+                      title: mergedTitle,
                       date_of_birth: ocrP.date_of_birth || p.date_of_birth,
                       other_info: ocrP.other_info || p.other_info
                     };
@@ -343,12 +371,22 @@ function App() {
         const formattedData = {
           booking_id: data.booking_id,
           booking_date: data.booking_date,
-          passengers: data.passengers.map(p => ({
-            full_name: p.full_name,
-            title: p.title || 'MR',
-            date_of_birth: p.date_of_birth || '1967-01-15',
-            other_info: p.other_info || '( A )'
-          })),
+          passengers: data.passengers.map(p => {
+            const passenger = {
+              full_name: p.full_name,
+              first_name: p.first_name || '',
+              last_name: p.last_name || '',
+              title: p.title || 'MR',
+              date_of_birth: p.date_of_birth || '1967-01-15',
+              other_info: p.other_info || '( A )'
+            };
+            if (!passenger.first_name && !passenger.last_name && passenger.full_name) {
+              const parsed = splitFullName(passenger.full_name, passenger.title);
+              passenger.first_name = parsed.firstName;
+              passenger.last_name = parsed.lastName;
+            }
+            return passenger;
+          }),
           segments: data.segments.map(s => {
             const logo = s.airline_logo || 'oman-air-logo-circular.png';
             const mapping = AIRLINE_MAPPING[logo] || { name: 'Oman Air', code: 'WY' };
@@ -447,7 +485,14 @@ function App() {
   const handlePassengerChange = (index, field, val) => {
     setBooking(prev => {
       const updatedP = [...prev.passengers];
-      updatedP[index] = { ...updatedP[index], [field]: val };
+      const passenger = { ...updatedP[index], [field]: val };
+      if (field === 'title' || field === 'first_name' || field === 'last_name') {
+        const titlePart = (passenger.title || '').trim();
+        const firstPart = (passenger.first_name || '').trim();
+        const lastPart = (passenger.last_name || '').trim();
+        passenger.full_name = `${titlePart} ${firstPart} ${lastPart}`.replace(/\s+/g, ' ').trim().toUpperCase();
+      }
+      updatedP[index] = passenger;
       return { ...prev, passengers: updatedP };
     });
   };
@@ -459,6 +504,8 @@ function App() {
         ...prev.passengers,
         {
           full_name: '',
+          first_name: '',
+          last_name: '',
           title: 'MR',
           date_of_birth: '',
           other_info: ''
@@ -490,6 +537,95 @@ function App() {
   const handleSaveAndDownload = () => {
     setSaving(true);
     setSaveError(null);
+
+    // Validate Passengers
+    for (let i = 0; i < booking.passengers.length; i++) {
+      const p = booking.passengers[i];
+      if (!p.title || !p.title.trim()) {
+        setSaveError(`Please fill in "Title" for Passenger #${i + 1}`);
+        setSaving(false);
+        setActiveFormTab('general');
+        return;
+      }
+      if (!p.first_name || !p.first_name.trim()) {
+        setSaveError(`Please fill in "First Name" for Passenger #${i + 1}`);
+        setSaving(false);
+        setActiveFormTab('general');
+        return;
+      }
+      if (!p.last_name || !p.last_name.trim()) {
+        setSaveError(`Please fill in "Last Name" for Passenger #${i + 1}`);
+        setSaving(false);
+        setActiveFormTab('general');
+        return;
+      }
+      if (!p.date_of_birth || !p.date_of_birth.trim()) {
+        setSaveError(`Please fill in "Date of Birth" for Passenger #${i + 1}`);
+        setSaving(false);
+        setActiveFormTab('general');
+        return;
+      }
+    }
+
+    // Validate Active Flight Segments
+    const activeSegments = booking.segments.filter(seg => seg.is_active !== false);
+    if (activeSegments.length === 0) {
+      setSaveError("Please activate at least one flight leg.");
+      setSaving(false);
+      setActiveFormTab('outbound');
+      return;
+    }
+
+    const requiredFields = [
+      { key: 'airline_name', label: 'Carrier' },
+      { key: 'airline_code', label: 'Code' },
+      { key: 'flight_number', label: 'Flight No' },
+      { key: 'pnr', label: 'Airline PNR' },
+      { key: 'departure_city', label: 'Departure City' },
+      { key: 'departure_country', label: 'Departure Country' },
+      { key: 'arrival_city', label: 'Arrival City' },
+      { key: 'arrival_country', label: 'Arrival Country' },
+      { key: 'departure_airport_name', label: 'Depart Airport' },
+      { key: 'departure_terminal', label: 'Depart Terminal' },
+      { key: 'arrival_airport_name', label: 'Arrival Airport' },
+      { key: 'arrival_terminal', label: 'Arrival Terminal' },
+      { key: 'departure_time', label: 'Departure Time' },
+      { key: 'arrival_time', label: 'Arrival Time' },
+      { key: 'duration', label: 'Duration' }
+    ];
+
+    for (const seg of activeSegments) {
+      for (const field of requiredFields) {
+        const val = seg[field.key];
+        if (val === undefined || val === null || val.toString().trim() === '') {
+          setSaveError(`Please fill in "${field.label}" for Leg ${seg.sequence}`);
+          setSaving(false);
+          if (seg.sequence <= 2) {
+            setActiveFormTab('outbound');
+          } else {
+            setActiveFormTab('return');
+          }
+          return;
+        }
+      }
+
+      // Layover check (only for sequence 1 and 3 if the next segment is active)
+      const nextSeg = booking.segments.find(s => s.sequence === seg.sequence + 1);
+      const isNextSegmentActive = nextSeg && nextSeg.is_active !== false;
+      if (isNextSegmentActive && (seg.sequence === 1 || seg.sequence === 3)) {
+        const val = seg.layover_duration;
+        if (val === undefined || val === null || val.toString().trim() === '') {
+          setSaveError(`Please fill in "Layover Duration" for Leg ${seg.sequence}`);
+          setSaving(false);
+          if (seg.sequence <= 2) {
+            setActiveFormTab('outbound');
+          } else {
+            setActiveFormTab('return');
+          }
+          return;
+        }
+      }
+    }
 
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
@@ -760,7 +896,7 @@ function App() {
 
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1 col-span-1">
-                          <label className="font-bold text-slate-500">Title</label>
+                          <label className="font-bold text-slate-500">Title <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             value={p.title || 'MR'}
@@ -768,30 +904,45 @@ function App() {
                             className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
                               }`}
                             placeholder="e.g. MR"
+                            required
                           />
                         </div>
-                        <div className="space-y-1 col-span-2">
-                          <label className="font-bold text-slate-500">Full Name</label>
+                        <div className="space-y-1 col-span-1">
+                          <label className="font-bold text-slate-500">First Name <span className="text-red-500">*</span></label>
                           <input
                             type="text"
-                            value={p.full_name || ''}
-                            onChange={(e) => handlePassengerChange(index, 'full_name', e.target.value)}
+                            value={p.first_name || ''}
+                            onChange={(e) => handlePassengerChange(index, 'first_name', e.target.value)}
                             className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
                               }`}
-                            placeholder="MR IMTIYAZ SAIT RAZACK SAIT"
+                            placeholder="IMTIYAZ SAIT"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1 col-span-1">
+                          <label className="font-bold text-slate-500">Last Name <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={p.last_name || ''}
+                            onChange={(e) => handlePassengerChange(index, 'last_name', e.target.value)}
+                            className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                              }`}
+                            placeholder="RAZACK SAIT"
+                            required
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="font-bold text-slate-500">Date of Birth</label>
+                          <label className="font-bold text-slate-500">Date of Birth <span className="text-red-500">*</span></label>
                           <input
                             type="date"
                             value={p.date_of_birth || ''}
                             onChange={(e) => handlePassengerChange(index, 'date_of_birth', e.target.value)}
                             className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono transition-all duration-500 ${highlightedFields.passenger ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
                               }`}
+                            required
                           />
                         </div>
                         <div className="space-y-1">
@@ -864,160 +1015,175 @@ function App() {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Carrier</label>
+                      <label className="font-bold text-slate-500">Carrier <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(1, 'airline_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Code</label>
+                      <label className="font-bold text-slate-500">Code <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(1, 'airline_code', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Flight No</label>
+                      <label className="font-bold text-slate-500">Flight No <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(1, 'flight_number', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <label className="font-bold text-slate-500">Airline PNR <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.pnr || ''}
                         onChange={(e) => handleSegmentChange(1, 'pnr', e.target.value.toUpperCase())}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure City</label>
+                      <label className="font-bold text-slate-500">Departure City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.departure_city || ''}
                         onChange={(e) => handleSegmentChange(1, 'departure_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Country</label>
+                      <label className="font-bold text-slate-500">Departure Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.departure_country || ''}
                         onChange={(e) => handleSegmentChange(1, 'departure_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival City</label>
+                      <label className="font-bold text-slate-500">Arrival City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.arrival_city || ''}
                         onChange={(e) => handleSegmentChange(1, 'arrival_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Country</label>
+                      <label className="font-bold text-slate-500">Arrival Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.arrival_country || ''}
                         onChange={(e) => handleSegmentChange(1, 'arrival_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Airport</label>
+                      <label className="font-bold text-slate-500">Depart Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.departure_airport_name || ''}
                         onChange={(e) => handleSegmentChange(1, 'departure_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Terminal</label>
+                      <label className="font-bold text-slate-500">Depart Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.departure_terminal || ''}
                         onChange={(e) => handleSegmentChange(1, 'departure_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Airport</label>
+                      <label className="font-bold text-slate-500">Arrival Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.arrival_airport_name || ''}
                         onChange={(e) => handleSegmentChange(1, 'arrival_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Terminal</label>
+                      <label className="font-bold text-slate-500">Arrival Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.arrival_terminal || ''}
                         onChange={(e) => handleSegmentChange(1, 'arrival_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Time</label>
+                      <label className="font-bold text-slate-500">Departure Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[0]?.departure_time ? booking.segments[0].departure_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(1, 'departure_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Time</label>
+                      <label className="font-bold text-slate-500">Arrival Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[0]?.arrival_time ? booking.segments[0].arrival_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(1, 'arrival_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Duration</label>
+                      <label className="font-bold text-slate-500">Duration <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[0]?.duration || ''}
                         onChange={(e) => handleSegmentChange(1, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Layover Duration</label>
+                      <label className="font-bold text-slate-500">Layover Duration {booking.segments[1]?.is_active !== false && <span className="text-red-500">*</span>}</label>
                       <input
                         type="text"
                         value={booking.segments[0]?.layover_duration || ''}
@@ -1067,156 +1233,171 @@ function App() {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Carrier</label>
+                      <label className="font-bold text-slate-500">Carrier <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(2, 'airline_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Code</label>
+                      <label className="font-bold text-slate-500">Code <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(2, 'airline_code', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Flight No</label>
+                      <label className="font-bold text-slate-500">Flight No <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(2, 'flight_number', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <label className="font-bold text-slate-500">Airline PNR <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.pnr || ''}
                         onChange={(e) => handleSegmentChange(2, 'pnr', e.target.value.toUpperCase())}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure City</label>
+                      <label className="font-bold text-slate-500">Departure City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.departure_city || ''}
                         onChange={(e) => handleSegmentChange(2, 'departure_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Country</label>
+                      <label className="font-bold text-slate-500">Departure Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.departure_country || ''}
                         onChange={(e) => handleSegmentChange(2, 'departure_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival City</label>
+                      <label className="font-bold text-slate-500">Arrival City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.arrival_city || ''}
                         onChange={(e) => handleSegmentChange(2, 'arrival_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Country</label>
+                      <label className="font-bold text-slate-500">Arrival Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.arrival_country || ''}
                         onChange={(e) => handleSegmentChange(2, 'arrival_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Airport</label>
+                      <label className="font-bold text-slate-500">Depart Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.departure_airport_name || ''}
                         onChange={(e) => handleSegmentChange(2, 'departure_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Terminal</label>
+                      <label className="font-bold text-slate-500">Depart Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.departure_terminal || ''}
                         onChange={(e) => handleSegmentChange(2, 'departure_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Airport</label>
+                      <label className="font-bold text-slate-500">Arrival Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.arrival_airport_name || ''}
                         onChange={(e) => handleSegmentChange(2, 'arrival_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Terminal</label>
+                      <label className="font-bold text-slate-500">Arrival Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.arrival_terminal || ''}
                         onChange={(e) => handleSegmentChange(2, 'arrival_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Time</label>
+                      <label className="font-bold text-slate-500">Departure Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[1]?.departure_time ? booking.segments[1].departure_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(2, 'departure_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Time</label>
+                      <label className="font-bold text-slate-500">Arrival Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[1]?.arrival_time ? booking.segments[1].arrival_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(2, 'arrival_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Duration</label>
+                      <label className="font-bold text-slate-500">Duration <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[1]?.duration || ''}
                         onChange={(e) => handleSegmentChange(2, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
@@ -1268,160 +1449,175 @@ function App() {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Carrier</label>
+                      <label className="font-bold text-slate-500">Carrier <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(3, 'airline_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Code</label>
+                      <label className="font-bold text-slate-500">Code <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(3, 'airline_code', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Flight No</label>
+                      <label className="font-bold text-slate-500">Flight No <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(3, 'flight_number', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <label className="font-bold text-slate-500">Airline PNR <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.pnr || ''}
                         onChange={(e) => handleSegmentChange(3, 'pnr', e.target.value.toUpperCase())}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure City</label>
+                      <label className="font-bold text-slate-500">Departure City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.departure_city || ''}
                         onChange={(e) => handleSegmentChange(3, 'departure_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Country</label>
+                      <label className="font-bold text-slate-500">Departure Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.departure_country || ''}
                         onChange={(e) => handleSegmentChange(3, 'departure_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival City</label>
+                      <label className="font-bold text-slate-500">Arrival City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.arrival_city || ''}
                         onChange={(e) => handleSegmentChange(3, 'arrival_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Country</label>
+                      <label className="font-bold text-slate-500">Arrival Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.arrival_country || ''}
                         onChange={(e) => handleSegmentChange(3, 'arrival_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Airport</label>
+                      <label className="font-bold text-slate-500">Depart Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.departure_airport_name || ''}
                         onChange={(e) => handleSegmentChange(3, 'departure_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Terminal</label>
+                      <label className="font-bold text-slate-500">Depart Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.departure_terminal || ''}
                         onChange={(e) => handleSegmentChange(3, 'departure_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Airport</label>
+                      <label className="font-bold text-slate-500">Arrival Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.arrival_airport_name || ''}
                         onChange={(e) => handleSegmentChange(3, 'arrival_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Terminal</label>
+                      <label className="font-bold text-slate-500">Arrival Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.arrival_terminal || ''}
                         onChange={(e) => handleSegmentChange(3, 'arrival_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Time</label>
+                      <label className="font-bold text-slate-500">Departure Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[2]?.departure_time ? booking.segments[2].departure_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(3, 'departure_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Time</label>
+                      <label className="font-bold text-slate-500">Arrival Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[2]?.arrival_time ? booking.segments[2].arrival_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(3, 'arrival_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Duration</label>
+                      <label className="font-bold text-slate-500">Duration <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[2]?.duration || ''}
                         onChange={(e) => handleSegmentChange(3, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Layover Duration</label>
+                      <label className="font-bold text-slate-500">Layover Duration {booking.segments[3]?.is_active !== false && <span className="text-red-500">*</span>}</label>
                       <input
                         type="text"
                         value={booking.segments[2]?.layover_duration || ''}
@@ -1471,156 +1667,171 @@ function App() {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Carrier</label>
+                      <label className="font-bold text-slate-500">Carrier <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(4, 'airline_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Code</label>
+                      <label className="font-bold text-slate-500">Code <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(4, 'airline_code', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Flight No</label>
+                      <label className="font-bold text-slate-500">Flight No <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(4, 'flight_number', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <label className="font-bold text-slate-500">Airline PNR <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.pnr || ''}
                         onChange={(e) => handleSegmentChange(4, 'pnr', e.target.value.toUpperCase())}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure City</label>
+                      <label className="font-bold text-slate-500">Departure City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.departure_city || ''}
                         onChange={(e) => handleSegmentChange(4, 'departure_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Country</label>
+                      <label className="font-bold text-slate-500">Departure Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.departure_country || ''}
                         onChange={(e) => handleSegmentChange(4, 'departure_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival City</label>
+                      <label className="font-bold text-slate-500">Arrival City <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.arrival_city || ''}
                         onChange={(e) => handleSegmentChange(4, 'arrival_city', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Country</label>
+                      <label className="font-bold text-slate-500">Arrival Country <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.arrival_country || ''}
                         onChange={(e) => handleSegmentChange(4, 'arrival_country', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Airport</label>
+                      <label className="font-bold text-slate-500">Depart Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.departure_airport_name || ''}
                         onChange={(e) => handleSegmentChange(4, 'departure_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Depart Terminal</label>
+                      <label className="font-bold text-slate-500">Depart Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.departure_terminal || ''}
                         onChange={(e) => handleSegmentChange(4, 'departure_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Airport</label>
+                      <label className="font-bold text-slate-500">Arrival Airport <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.arrival_airport_name || ''}
                         onChange={(e) => handleSegmentChange(4, 'arrival_airport_name', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Terminal</label>
+                      <label className="font-bold text-slate-500">Arrival Terminal <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.arrival_terminal || ''}
                         onChange={(e) => handleSegmentChange(4, 'arrival_terminal', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Departure Time</label>
+                      <label className="font-bold text-slate-500">Departure Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[3]?.departure_time ? booking.segments[3].departure_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(4, 'departure_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Arrival Time</label>
+                      <label className="font-bold text-slate-500">Arrival Time <span className="text-red-500">*</span></label>
                       <input
                         type="datetime-local"
                         value={booking.segments[3]?.arrival_time ? booking.segments[3].arrival_time.substring(0, 16) : ''}
                         onChange={(e) => handleSegmentChange(4, 'arrival_time', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Duration</label>
+                      <label className="font-bold text-slate-500">Duration <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={booking.segments[3]?.duration || ''}
                         onChange={(e) => handleSegmentChange(4, 'duration', e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        required
                       />
                     </div>
                   </div>
