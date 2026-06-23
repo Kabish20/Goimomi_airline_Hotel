@@ -14,8 +14,18 @@ def get_booking_details(request, booking_id):
     # Serialize segments
     segments_data = []
     for seg in booking.segments.all():
+        # Get PNR for this segment from the first passenger's details (or default to ONFDOJ)
+        pnr = "ONFDOJ"
+        if booking.passengers.all():
+            first_p = booking.passengers.all()[0]
+            for detail in first_p.segment_details.all():
+                if detail.segment_id == seg.id:
+                    pnr = detail.pnr
+                    break
+
         segments_data.append({
             "sequence": seg.sequence,
+            "pnr": pnr,
             "airline": f"{seg.airline_name} ({seg.airline_code}-{seg.flight_number})",
             "airline_name": seg.airline_name,
             "airline_code": seg.airline_code,
@@ -200,11 +210,11 @@ def save_booking_details(request):
             
         # Recreate passenger segment details (PNR config)
         for p in saved_passengers:
-            for seg in saved_segments:
+            for s_data, seg in zip(segments_list, saved_segments):
                 PassengerSegmentDetail.objects.create(
                     passenger=p,
                     segment=seg,
-                    pnr="ONFDOJ",
+                    pnr=s_data.get('pnr', 'ONFDOJ'),
                     ticket_number=""
                 )
                 

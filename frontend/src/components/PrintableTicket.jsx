@@ -287,7 +287,7 @@ export default function PrintableTicket({ booking }) {
             </div>
             <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
               <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
-              <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
+              <span className="text-xs font-black text-black font-mono">{seg1.pnr || seg2.pnr || 'ONFDOJ'}</span>
             </div>
           </div>
 
@@ -462,10 +462,10 @@ export default function PrintableTicket({ booking }) {
                   </td>
                   <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
                     {seg1.is_active !== false && (
-                      <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                      <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">{seg1.pnr || 'ONFDOJ'}</strong></div>
                     )}
                     {seg2.is_active !== false && (
-                      <div>{seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                      <div>{seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">{seg2.pnr || 'ONFDOJ'}</strong></div>
                     )}
                   </td>
                   <td className="px-4 py-4 text-gray-400 italic"></td>
@@ -491,7 +491,7 @@ export default function PrintableTicket({ booking }) {
               </div>
               <div className="border border-gray-300 bg-gray-50 px-4 py-1.5 rounded flex flex-col items-end">
                 <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Airline PNR:</span>
-                <span className="text-xs font-black text-black font-mono">ONFDOJ</span>
+                <span className="text-xs font-black text-black font-mono">{seg3.pnr || seg4.pnr || 'ONFDOJ'}</span>
               </div>
             </div>
 
@@ -666,10 +666,10 @@ export default function PrintableTicket({ booking }) {
                     </td>
                     <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
                       {seg3.is_active !== false && (
-                        <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                        <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">{seg3.pnr || 'ONFDOJ'}</strong></div>
                       )}
                       {seg4.is_active !== false && (
-                        <div>{seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">ONFDOJ</strong></div>
+                        <div>{seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">{seg4.pnr || 'ONFDOJ'}</strong></div>
                       )}
                     </td>
                     <td className="px-4 py-4 text-gray-400 italic"></td>

@@ -65,6 +65,7 @@ const INITIAL_MOCK_DATA = {
   "segments": [
     {
       "sequence": 1,
+      "pnr": "ONFDOJ",
       "airline_name": "Oman Aviation",
       "airline_code": "WY",
       "flight_number": "252",
@@ -89,6 +90,7 @@ const INITIAL_MOCK_DATA = {
     },
     {
       "sequence": 2,
+      "pnr": "ONFDOJ",
       "airline_name": "Oman Aviation",
       "airline_code": "WY",
       "flight_number": "675",
@@ -113,6 +115,7 @@ const INITIAL_MOCK_DATA = {
     },
     {
       "sequence": 3,
+      "pnr": "ONFDOJ",
       "airline_name": "Oman Aviation",
       "airline_code": "WY",
       "flight_number": "674",
@@ -137,6 +140,7 @@ const INITIAL_MOCK_DATA = {
     },
     {
       "sequence": 4,
+      "pnr": "ONFDOJ",
       "airline_name": "Oman Aviation",
       "airline_code": "WY",
       "flight_number": "253",
@@ -149,7 +153,7 @@ const INITIAL_MOCK_DATA = {
       "arrival_city": "Chennai",
       "arrival_country": "India",
       "arrival_airport_name": "Chennai Arpt",
-      "arrival_terminal": "Terminal 2",
+      "departure_terminal": "Terminal 2",
       "arrival_time": "2026-09-18T14:40:00.000Z",
       "duration": "3h 50m",
       "cabin_class": "Economy",
@@ -356,6 +360,7 @@ function App() {
             }
             return {
               sequence: s.sequence,
+              pnr: s.pnr || 'ONFDOJ',
               airline_name: name,
               airline_code: code,
               flight_number: s.flight_number,
@@ -677,30 +682,51 @@ function App() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-500 font-sans">Common Airline Logo</label>
-                  <select
-                    value={booking.segments[0]?.airline_logo || 'oman-air-logo-circular.png'}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const mapping = AIRLINE_MAPPING[val] || { name: 'Oman Air', code: 'WY' };
-                      setBooking(prev => {
-                        const updatedSegs = prev.segments.map(seg => ({
-                          ...seg,
-                          airline_logo: val,
-                          airline_name: mapping.name,
-                          airline_code: mapping.code
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-500">Airline PNR</label>
+                    <input
+                      type="text"
+                      value={booking.segments[0]?.pnr || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        setBooking(prev => ({
+                          ...prev,
+                          segments: prev.segments.map(seg => ({
+                            ...seg,
+                            pnr: val
+                          }))
                         }));
-                        return { ...prev, segments: updatedSegs };
-                      });
-                    }}
-                    className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-sans text-xs transition-all duration-500 ${highlightedFields.airline ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
-                      }`}
-                  >
-                    {AIRLINE_LOGOS.map(logo => (
-                      <option key={logo.value} value={logo.value}>{logo.label}</option>
-                    ))}
-                  </select>
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-mono uppercase"
+                      placeholder="e.g. ONFDOJ"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-500 font-sans">Common Airline Logo</label>
+                    <select
+                      value={booking.segments[0]?.airline_logo || 'oman-air-logo-circular.png'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const mapping = AIRLINE_MAPPING[val] || { name: 'Oman Air', code: 'WY' };
+                        setBooking(prev => {
+                          const updatedSegs = prev.segments.map(seg => ({
+                            ...seg,
+                            airline_logo: val,
+                            airline_name: mapping.name,
+                            airline_code: mapping.code
+                          }));
+                          return { ...prev, segments: updatedSegs };
+                        });
+                      }}
+                      className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-yellow-500 focus:bg-white font-sans text-xs transition-all duration-500 ${highlightedFields.airline ? 'border-green-500 bg-green-50 shadow-sm shadow-green-100 ring-2 ring-green-200' : 'border-slate-200'
+                        }`}
+                    >
+                      {AIRLINE_LOGOS.map(logo => (
+                        <option key={logo.value} value={logo.value}>{logo.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <h2 className="font-extrabold text-sm text-slate-900 border-b border-slate-100 pb-2 pt-2">Passenger Identity</h2>
@@ -825,14 +851,14 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
                       <input
                         type="text"
                         value={booking.segments[0]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(1, 'airline_name', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -841,7 +867,7 @@ function App() {
                         type="text"
                         value={booking.segments[0]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(1, 'airline_code', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -850,7 +876,16 @@ function App() {
                         type="text"
                         value={booking.segments[0]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(1, 'flight_number', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <input
+                        type="text"
+                        value={booking.segments[0]?.pnr || ''}
+                        onChange={(e) => handleSegmentChange(1, 'pnr', e.target.value.toUpperCase())}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
                       />
                     </div>
                   </div>
@@ -1019,14 +1054,14 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
                       <input
                         type="text"
                         value={booking.segments[1]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(2, 'airline_name', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1035,7 +1070,7 @@ function App() {
                         type="text"
                         value={booking.segments[1]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(2, 'airline_code', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1044,7 +1079,16 @@ function App() {
                         type="text"
                         value={booking.segments[1]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(2, 'flight_number', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <input
+                        type="text"
+                        value={booking.segments[1]?.pnr || ''}
+                        onChange={(e) => handleSegmentChange(2, 'pnr', e.target.value.toUpperCase())}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
                       />
                     </div>
                   </div>
@@ -1211,14 +1255,14 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
                       <input
                         type="text"
                         value={booking.segments[2]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(3, 'airline_name', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1227,7 +1271,7 @@ function App() {
                         type="text"
                         value={booking.segments[2]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(3, 'airline_code', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1236,7 +1280,16 @@ function App() {
                         type="text"
                         value={booking.segments[2]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(3, 'flight_number', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <input
+                        type="text"
+                        value={booking.segments[2]?.pnr || ''}
+                        onChange={(e) => handleSegmentChange(3, 'pnr', e.target.value.toUpperCase())}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
                       />
                     </div>
                   </div>
@@ -1405,14 +1458,14 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1">
                       <label className="font-bold text-slate-500">Carrier</label>
                       <input
                         type="text"
                         value={booking.segments[3]?.airline_name || ''}
                         onChange={(e) => handleSegmentChange(4, 'airline_name', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1421,7 +1474,7 @@ function App() {
                         type="text"
                         value={booking.segments[3]?.airline_code || ''}
                         onChange={(e) => handleSegmentChange(4, 'airline_code', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1430,7 +1483,16 @@ function App() {
                         type="text"
                         value={booking.segments[3]?.flight_number || ''}
                         onChange={(e) => handleSegmentChange(4, 'flight_number', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none text-[11px]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Airline PNR</label>
+                      <input
+                        type="text"
+                        value={booking.segments[3]?.pnr || ''}
+                        onChange={(e) => handleSegmentChange(4, 'pnr', e.target.value.toUpperCase())}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 text-slate-800 focus:outline-none font-mono text-[11px] uppercase"
                       />
                     </div>
                   </div>
