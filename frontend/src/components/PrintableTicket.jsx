@@ -127,6 +127,7 @@ export default function PrintableTicket({ booking }) {
     if (city.includes('chennai')) return 'MAA';
     if (city.includes('muscat')) return 'MCT';
     if (city.includes('jeddah')) return 'JED';
+    if (city.includes('sharjah')) return 'SHJ';
     return cityName.substring(0, 3).toUpperCase();
   };
 
@@ -453,14 +454,14 @@ export default function PrintableTicket({ booking }) {
             <tbody className="divide-y divide-gray-200">
               {booking.passengers.map((p, idx) => (
                 <tr key={idx}>
-                  <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
-                  <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
+                  <td className="px-4 py-4 border-r border-gray-300 text-center font-bold w-12">{idx + 1}</td>
+                  <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-1 w-5/12">
                     <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
-                    <div className="pt-2">
+                    <div className="pt-1">
                       {renderSingleBarcode(idx)}
                     </div>
                   </td>
-                  <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
+                  <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1 w-3/12">
                     {seg1.is_active !== false && (
                       <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">{seg1.pnr || 'ONFDOJ'}</strong></div>
                     )}
@@ -657,14 +658,14 @@ export default function PrintableTicket({ booking }) {
               <tbody className="divide-y divide-gray-200">
                 {booking.passengers.map((p, idx) => (
                   <tr key={idx}>
-                    <td className="px-4 py-4 border-r border-gray-300 text-center font-bold">{idx + 1}</td>
-                    <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-2">
+                    <td className="px-4 py-4 border-r border-gray-300 text-center font-bold w-12">{idx + 1}</td>
+                    <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-1 w-5/12">
                       <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
-                      <div className="pt-2">
+                      <div className="pt-1">
                         {renderSingleBarcode(idx)}
                       </div>
                     </td>
-                    <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1">
+                    <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1 w-3/12">
                       {seg3.is_active !== false && (
                         <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">{seg3.pnr || 'ONFDOJ'}</strong></div>
                       )}
@@ -683,7 +684,7 @@ export default function PrintableTicket({ booking }) {
       {/* ========================================================
           IMPORTANT INFORMATION
           ======================================================== */}
-      <div className="border border-gray-300 rounded p-4 mb-6 text-left bg-white">
+      <div className="border border-gray-300 rounded p-4 mb-6 text-left bg-white important-info-box">
         <div className="text-[#b38f24] font-bold text-xs tracking-wider mb-2">IMPORTANT INFORMATION</div>
         <div className="space-y-1 text-gray-800 text-[10px] leading-relaxed">
           <div>1 - You must web check-in on the airline website and obtain a boarding pass.</div>
@@ -699,7 +700,7 @@ export default function PrintableTicket({ booking }) {
       {/* ========================================================
           DANGEROUS GOODS & HAND BAGGAGE ONLY INFO (CLONED)
           ======================================================== */}
-      <div className="bg-white text-left grid grid-cols-12 gap-2 text-[10px]">
+      <div className="bg-white text-left grid grid-cols-12 gap-2 text-[10px] dangerous-goods-box">
         
         {/* Dangerous Goods (Banned) */}
         <div className="col-span-7 pr-4 border-r border-gray-200">

@@ -39,12 +39,12 @@ body {
 
   /* Custom page-specific paddings to act as page margins */
   .print-page-1 {
-    padding: 12mm 15mm 0 15mm !important;
+    padding: 6mm 10mm 0 10mm !important;
     box-sizing: border-box !important;
   }
 
   .print-page-2 {
-    padding: 12mm 15mm 12mm 15mm !important;
+    padding: 6mm 10mm 6mm 10mm !important;
     box-sizing: border-box !important;
     page-break-before: always !important;
     break-before: page !important;
@@ -65,52 +65,61 @@ body {
     box-shadow: none !important;
     background: transparent !important;
     color: #000000 !important;
-    font-size: 11px !important; /* Slightly smaller base font size on print to guarantee 2-page limit */
+    font-size: 10.5px !important; /* Slightly smaller base font size on print to guarantee 2-page limit */
   }
 
   .print-area .mb-6 {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
   .print-area .mb-8 {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
   .print-area .p-4 {
-    padding: 8px 12px !important;
+    padding: 6px 10px !important;
   }
   .print-area .pb-4 {
-    padding-bottom: 6px !important;
+    padding-bottom: 4px !important;
   }
   .print-area .mt-4 {
-    margin-top: 8px !important;
+    margin-top: 6px !important;
   }
   .print-area .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 6px !important;
+    margin-top: 4px !important;
   }
   
   /* Compact table cells */
   .print-area table td, .print-area table th {
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-  }
-  .print-area table td {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
+    padding: 3px 5px !important;
   }
   
   /* Layover banner scaling */
   .print-area .py-1\.5 {
-    padding-top: 3px !important;
-    padding-bottom: 3px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
   }
   
   /* Dangerous goods vertical gaps */
   .print-area .gap-y-4 {
-    row-gap: 6px !important;
+    row-gap: 4px !important;
   }
   
-  /* Shrink barcodes slightly */
+  /* Important Info box */
+  .print-area .important-info-box {
+    padding: 6px 10px !important;
+    margin-bottom: 6px !important;
+  }
+  .print-area .important-info-box .space-y-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1px !important;
+  }
+  
+  /* Dangerous goods box spacing */
+  .print-area .dangerous-goods-box {
+    margin-top: 6px !important;
+  }
+  
+  /* Shrink barcodes slightly to prevent clipping */
   .print-area svg {
-    max-height: 38px !important;
+    max-height: 28px !important;
   }
 
   /* Prevent item splitting */
