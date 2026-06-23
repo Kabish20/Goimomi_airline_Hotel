@@ -2,11 +2,14 @@ from django.db import models
 
 class Booking(models.Model):
     objects = models.Manager()
-    class DoesNotExist(Exception): pass
     booking_id = models.CharField(max_length=50, unique=True, db_index=True, help_text="Booking ID, e.g. TJ1189178071008")
     booking_date = models.DateTimeField(help_text="Date and time the booking was made")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Type annotations for reverse relations to satisfy Pyright/type checkers
+    passengers: models.Manager['Passenger']
+    segments: models.Manager['FlightSegment']
 
     class Meta:
         ordering = ['-booking_date']
@@ -26,6 +29,9 @@ class Passenger(models.Model):
     passport_number = models.CharField(max_length=50, blank=True, null=True)
     frequent_flyer_number = models.CharField(max_length=50, blank=True, null=True)
     other_info = models.CharField(max_length=100, blank=True, null=True, help_text="Additional identity info, e.g. ( A )")
+
+    # Type annotations for reverse relations to satisfy Pyright/type checkers
+    segment_details: models.Manager['PassengerSegmentDetail']
 
     def __str__(self):
         return self.full_name
@@ -65,6 +71,9 @@ class FlightSegment(models.Model):
     layover_duration = models.CharField(max_length=30, blank=True, null=True, help_text="Layover timer after this segment, e.g. 4h 15m")
     layover_minutes = models.IntegerField(blank=True, null=True)
     is_active = models.BooleanField(default=True, help_text="Whether this segment is active and displayed on the printable ticket")
+
+    # Type annotations for reverse relations to satisfy Pyright/type checkers
+    passenger_details: models.Manager['PassengerSegmentDetail']
 
     class Meta:
         ordering = ['sequence']

@@ -210,6 +210,45 @@ export default function PrintableTicket({ booking }) {
 
   const passenger = booking.passengers[0] || { full_name: '', date_of_birth: '', other_info: '' };
 
+  const getSegmentDetail = (p, seq) => {
+    return p.segment_specific_details?.find(d => d.segment_sequence === seq);
+  };
+
+  const renderPreferences = (p, seqs) => {
+    if (!p.segment_specific_details || p.segment_specific_details.length === 0) {
+      return <span className="text-gray-400 italic">No preference selected</span>;
+    }
+    
+    const activeDetails = p.segment_specific_details.filter(d => 
+      seqs.includes(d.segment_sequence) && 
+      d.preferences && 
+      Object.values(d.preferences).some(Boolean)
+    );
+    
+    if (activeDetails.length === 0) {
+      return <span className="text-gray-400 italic">No preference selected</span>;
+    }
+    
+    return (
+      <div className="space-y-1 text-[10px] text-gray-700 leading-tight">
+        {activeDetails.map((detail, dIdx) => {
+          const prefs = [];
+          if (detail.preferences.meal) prefs.push(`Meal: ${detail.preferences.meal}`);
+          if (detail.preferences.seat) prefs.push(`Seat: ${detail.preferences.seat}`);
+          if (detail.preferences.baggage) prefs.push(`Baggage: ${detail.preferences.baggage}`);
+          if (detail.preferences.other) prefs.push(`Other: ${detail.preferences.other}`);
+          
+          return (
+            <div key={dIdx}>
+              <span className="font-semibold text-gray-900">{detail.route || `Leg ${detail.segment_sequence}`}:</span>{' '}
+              {prefs.join(', ')}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Barcode matching the exact PDF417 barcode image uploaded by the user - renders a single barcode
   const renderSingleBarcode = (idx) => {
     const BARCODE_ROWS = [
@@ -457,19 +496,38 @@ export default function PrintableTicket({ booking }) {
                   <td className="px-4 py-4 border-r border-gray-300 text-center font-bold w-12">{idx + 1}</td>
                   <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-1 w-5/12">
                     <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
+                    {(p.passport_number || p.frequent_flyer_number) && (
+                      <div className="text-[10px] text-gray-500 font-normal">
+                        {p.passport_number && <span>Passport: {p.passport_number}</span>}
+                        {p.passport_number && p.frequent_flyer_number && <span className="mx-1.5">|</span>}
+                        {p.frequent_flyer_number && <span>FF: {p.frequent_flyer_number}</span>}
+                      </div>
+                    )}
                     <div className="pt-1">
                       {renderSingleBarcode(idx)}
                     </div>
                   </td>
                   <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1 w-3/12">
                     {seg1.is_active !== false && (
-                      <div>{seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">{seg1.pnr || 'ONFDOJ'}</strong></div>
+                      <div>
+                        {seg1.departure_city && seg1.arrival_city ? `${getCityCode(seg1.departure_city)}-${getCityCode(seg1.arrival_city)}` : 'MAA-MCT'} : <strong className="font-black text-black">{getSegmentDetail(p, 1)?.pnr || seg1.pnr || 'ONFDOJ'}</strong>
+                        {getSegmentDetail(p, 1)?.ticket_number && (
+                          <span className="text-gray-500 font-normal"> / {getSegmentDetail(p, 1).ticket_number}</span>
+                        )}
+                      </div>
                     )}
                     {seg2.is_active !== false && (
-                      <div>{seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">{seg2.pnr || 'ONFDOJ'}</strong></div>
+                      <div>
+                        {seg2.departure_city && seg2.arrival_city ? `${getCityCode(seg2.departure_city)}-${getCityCode(seg2.arrival_city)}` : 'MCT-JED'} : <strong className="font-black text-black">{getSegmentDetail(p, 2)?.pnr || seg2.pnr || 'ONFDOJ'}</strong>
+                        {getSegmentDetail(p, 2)?.ticket_number && (
+                          <span className="text-gray-500 font-normal"> / {getSegmentDetail(p, 2).ticket_number}</span>
+                        )}
+                      </div>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-gray-400 italic"></td>
+                  <td className="px-4 py-4 text-gray-700 w-4/12 text-left">
+                    {renderPreferences(p, [1, 2])}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -478,7 +536,7 @@ export default function PrintableTicket({ booking }) {
       )}
       </div>
  
-      <div className="print-page-2">
+      <div className={isInboundActive ? "print-page-2" : "print-page-1"}>
         {/* ========================================================
             INBOUND CONTAINER
             ======================================================== */}
@@ -661,19 +719,38 @@ export default function PrintableTicket({ booking }) {
                     <td className="px-4 py-4 border-r border-gray-300 text-center font-bold w-12">{idx + 1}</td>
                     <td className="px-4 py-4 border-r border-gray-300 font-semibold text-gray-900 text-left space-y-1 w-5/12">
                       <div>{p.full_name} {p.other_info ? `${p.other_info}` : ''} {p.date_of_birth}</div>
+                      {(p.passport_number || p.frequent_flyer_number) && (
+                        <div className="text-[10px] text-gray-500 font-normal">
+                          {p.passport_number && <span>Passport: {p.passport_number}</span>}
+                          {p.passport_number && p.frequent_flyer_number && <span className="mx-1.5">|</span>}
+                          {p.frequent_flyer_number && <span>FF: {p.frequent_flyer_number}</span>}
+                        </div>
+                      )}
                       <div className="pt-1">
                         {renderSingleBarcode(idx)}
                       </div>
                     </td>
                     <td className="px-4 py-4 border-r border-gray-300 font-mono space-y-1 w-3/12">
                       {seg3.is_active !== false && (
-                        <div>{seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">{seg3.pnr || 'ONFDOJ'}</strong></div>
+                        <div>
+                          {seg3.departure_city && seg3.arrival_city ? `${getCityCode(seg3.departure_city)}-${getCityCode(seg3.arrival_city)}` : 'JED-MCT'} : <strong className="font-black text-black">{getSegmentDetail(p, 3)?.pnr || seg3.pnr || 'ONFDOJ'}</strong>
+                          {getSegmentDetail(p, 3)?.ticket_number && (
+                            <span className="text-gray-500 font-normal"> / {getSegmentDetail(p, 3).ticket_number}</span>
+                          )}
+                        </div>
                       )}
                       {seg4.is_active !== false && (
-                        <div>{seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">{seg4.pnr || 'ONFDOJ'}</strong></div>
+                        <div>
+                          {seg4.departure_city && seg4.arrival_city ? `${getCityCode(seg4.departure_city)}-${getCityCode(seg4.arrival_city)}` : 'MCT-MAA'} : <strong className="font-black text-black">{getSegmentDetail(p, 4)?.pnr || seg4.pnr || 'ONFDOJ'}</strong>
+                          {getSegmentDetail(p, 4)?.ticket_number && (
+                            <span className="text-gray-500 font-normal"> / {getSegmentDetail(p, 4).ticket_number}</span>
+                          )}
+                        </div>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-gray-400 italic"></td>
+                    <td className="px-4 py-4 text-gray-700 w-4/12 text-left">
+                      {renderPreferences(p, [3, 4])}
+                    </td>
                   </tr>
                 ))}
               </tbody>

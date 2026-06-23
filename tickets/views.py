@@ -211,13 +211,41 @@ def save_booking_details(request):
             saved_segments.append(seg)
             
         # Recreate passenger segment details (PNR config)
-        for p in saved_passengers:
+        for p, p_data in zip(saved_passengers, passengers_list):
             for s_data, seg in zip(segments_list, saved_segments):
+                pnr_val = s_data.get('pnr', 'ONFDOJ')
+                tkt_val = ""
+                meal_pref = None
+                baggage_pref = None
+                seat_pref = None
+                other_pref = None
+                
+                # Check if passenger has matching segment specific details
+                seg_details = p_data.get('segment_specific_details', [])
+                matching_detail = None
+                for d in seg_details:
+                    if d.get('segment_sequence') == seg.sequence:
+                        matching_detail = d
+                        break
+                        
+                if matching_detail:
+                    pnr_val = matching_detail.get('pnr', pnr_val)
+                    tkt_val = matching_detail.get('ticket_number', '')
+                    prefs = matching_detail.get('preferences', {})
+                    meal_pref = prefs.get('meal')
+                    baggage_pref = prefs.get('baggage')
+                    seat_pref = prefs.get('seat')
+                    other_pref = prefs.get('other')
+
                 PassengerSegmentDetail.objects.create(
                     passenger=p,
                     segment=seg,
-                    pnr=s_data.get('pnr', 'ONFDOJ'),
-                    ticket_number=""
+                    pnr=pnr_val,
+                    ticket_number=tkt_val,
+                    meal_preference=meal_pref,
+                    baggage_preference=baggage_pref,
+                    seat_preference=seat_pref,
+                    other_preference=other_pref
                 )
                 
         return JsonResponse({"success": True, "booking_id": booking.booking_id})
